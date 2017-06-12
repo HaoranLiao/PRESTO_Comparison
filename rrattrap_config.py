@@ -3,8 +3,8 @@ from scipy.special import erf
 import numpy as np
 
 #tel = 'GBNCC'
-tel = 'PALFA'
-
+#tel = 'PALFA'
+tel = 'CHIME_PathFinder'
 CLOSE_DM = 2 # pc cm-3
 # MIN_GROUP, DM_THRESH, TIME_THRESH will change later on depending on the DDplan.
 MIN_GROUP = 30 #minimum group size that is not considered noise
@@ -34,7 +34,17 @@ elif tel == 'PALFA':
     ####To search 5 neighbouring DM trials at low DMs and 3 DM trials for pulses with DM > 3266####
     dm_fac_arr = np.array([1,3,3,5,5,10,20,18,30])
     t_fac_arr = np.array([1,2,3,5,6,10,10,10,10])          
-
+elif tel == 'CHIME_PathFinder':
+    DM_step = np.array([0.2, 0.3, 0.5, 1.0])
+    low_DM = np.array([0.0,361.2,575.4,983.4])
+    DM_THRESH = 0.5
+    ####factors that mutliply DM_THRESH and TIME_THRESH
+    ####To search 5 neighbouring DM trials#####
+    #dm_fac_arr = np.array([1,3,3,5,5,10,20,30,50]) 
+    ####To search 5 neighbouring DM trials at low DMs and 3 DM trials for pulses with DM > 3266####
+    dm_fac_arr = np.array([1,2,4,8])
+    t_fac_arr = np.array([1,1,1,2])          
+    
 def use_dmplan(DM):                                                                                              
     """ Sets a factor which multiplies the DMthreshold and time_threshold.                                                                      
         This makes the DM_THRESH and TIME_THRESH depend on the DM instead of having fixed                                                       

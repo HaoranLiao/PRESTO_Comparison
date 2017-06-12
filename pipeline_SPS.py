@@ -342,15 +342,22 @@ def read_pulses(dir):
    
     return pulse
 
-def plot_pulses(dir, pulses):
+def plot_pulses(dir, pulses, fileroot):
+    os.chdir(dir)
     import matplotlib.pyplot as plt
-    time, dm = [], []
+    fig = plt.figure()
     for pul in pulses:
-	time.append(pul['Center time']) 
+	c = []
+	c.append(pul['Rank'])
 	cen_dm = pul['Min DM']+(pul['Max DM']-pul['Min DM'])/2
-	dm.append(cen_dm)
-    dbgmsg(time, dm)
-    plt.scatter(time, dm)
+	c = ['red' if x==7.0 else 'blue' if x==6.0 else 'green' if x==5.0 else x for x in c]
+        plt.errorbar(pul['Center time'], cen_dm,\
+		     xerr=pul['Duration']/2, yerr=(pul['Max DM']-pul['Min DM'])/2,\
+		     marker='.', c=c[0], linestyle='None', markersize='3', elinewidth=1, capsize=0)
+    plt.title('Single Pulses')
+    plt.xlabel('Center Time (s)')
+    plt.ylabel('DM Range')
+    fig.savefig('%s_single_pulses.png'%fileroot)
     plt.show()
 
 def save_obj(obj, name):
@@ -427,7 +434,7 @@ def main():
     print("%sDONE GROUPING PULSES%s\n"%(dash, dash))
 
     print("%sSTART %s"%(dash, dash))
-    plot_pulses(output_dir, pulses)
+    plot_pulses(output_dir, pulses, fileroot)
     print("%sDONE GROUPING PULSES%s\n"%(dash, dash))
     
 if __name__ == "__main__":

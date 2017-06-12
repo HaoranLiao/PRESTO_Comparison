@@ -25,7 +25,7 @@ import matplotlib.pyplot as plt
 from Pgplot import *
 import optparse
 import sys
-import spio
+import singlepulse.spio as spio
 ####Modification by Pragya (November 15,2016)
 import rrattrap_config
 ############################################
@@ -328,7 +328,8 @@ def flag_noise(groups, inffile, dt, chan_width, BW_MHz, use_dmplan=False, vary_g
         if grp.numpulses < min_group and grp.rank != 7:
             grp.rank = 1
         ####FIXME: Specific to PALFA
-        if max(min_group,grp.numpulses) < 20 and grp.max_sigma > 10: 
+        if max(min_group,grp.numpulses) < 20 and grp.max_sigma > 10:
+            grp.rank = 7 
             if opt_DM > 5546.4 and duration_C < 10e-3:
                grp.rank = 7
             elif 1826.4 < opt_DM < 5546.4 and duration_C < 5e-3:
