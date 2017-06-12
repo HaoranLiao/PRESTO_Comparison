@@ -315,9 +315,43 @@ def get_single_pulse_search_macro(dir, fileroot):
 
     return sps_result   
 
-def read_pulse_candidates(dir, fileroot):
-    os.chdir(dir)    
-    pass
+def read_pulses(dir):
+    os.chdir(dir)
+    with open('rrattrap_testgroups.txt') as f:
+        content = f.readlines()
+    content = [x.strip() for x in content]
+    pulse = []
+    count = 0
+    for i in range(len(content)):
+	info = {}
+	if content[i].startswith('Group'):
+	    rank = content[i+6].split()[1].strip()
+	    #dbgmsg(rank)
+	    rank = float(rank)
+    	    dbgmsg(rank)
+	    if rank==7.0 or rank==6.0 or rank==5.0:
+		info['Min DM'] = float(content[i+1].split(':')[1].strip())
+		info['Max DM'] = float(content[i+2].split(':')[1].strip())
+		info['Center time'] =  float(content[i+3].split(':')[1].strip())
+		info['Duration'] = float(content[i+4].split(':')[1].strip())
+		info['Max Sigma'] = float(content[i+5].split(':')[1].strip())
+		info['Rank'] = rank
+		pulse.append(info)
+		count += 1
+    dbgmsg(pulse, count)
+   
+    return pulse
+
+def plot_pulses(dir, pulses):
+    import matplotlib.pyplot as plt
+    time, dm = [], []
+    for pul in pulses:
+	time.append(pul['Center time']) 
+	cen_dm = pul['Min DM']+(pul['Max DM']-pul['Min DM'])/2
+	dm.append(cen_dm)
+    dbgmsg(time, dm)
+    plt.scatter(time, dm)
+    plt.show()
 
 def save_obj(obj, name):
     with open(os.getcwd()+'/'+name+'.pkl', 'wb') as f:
@@ -369,7 +403,7 @@ def main():
     rfifind_time_interval = 5.0
     clip = 6.0						
     #if not os.path.isfile(fileroot+'_rfifind.mask'):
-    maskname = run_rfifind(input_filename, rfifind_time_interval, '-zerodm -clip %.1f'%clip)
+    #maskname = run_rfifind(input_filename, rfifind_time_interval, '-zerodm -clip %.1f'%clip)
     #else:
     #     maskname = fileroot+'_rfifind.mask'
     #dbgmsg('Mask Name: %s'%maskname)
@@ -385,12 +419,16 @@ def main():
     #group: the number fo DMs grouped together to generate the folded plot
     print("%sSTART PREPARING SUBBANDS & SINGLE PULSE SEARCH%s"%(dash, dash))
     group = 100
-    group_single_pulse_search_plot(input_filename, plan_header, output_dir, group)
+    #group_single_pulse_search_plot(input_filename, plan_header, output_dir, group)
     print("%sDONE SINGLE PULSE SEARCH & FILES MOVED%s\n"%(dash, dash))
     
-    print("%sSTART READING PULSE CANDIDATES DATA%s"%(dash, dash))
-    pulse_profile_header = read_pulse_candidates(output_dir, fileroot)
-    print("%sEND READING PULSE CANDIDATES DATA%s\n"%(dash, dash))
+    print("%sSTART GROUPING PULSES%s"%(dash, dash))
+    pulses = read_pulses(output_dir)
+    print("%sDONE GROUPING PULSES%s\n"%(dash, dash))
+
+    print("%sSTART %s"%(dash, dash))
+    plot_pulses(output_dir, pulses)
+    print("%sDONE GROUPING PULSES%s\n"%(dash, dash))
     
 if __name__ == "__main__":
     main()
