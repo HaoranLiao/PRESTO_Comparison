@@ -327,9 +327,7 @@ def read_pulses(dir):
 	info = {}
 	if content[i].startswith('Group'):
 	    rank = content[i+6].split()[1].strip()
-	    #dbgmsg(rank)
 	    rank = float(rank)
-    	    dbgmsg(rank)
 	    if rank==7.0 or rank==6.0 or rank==5.0:
 		info['Min DM'] = float(content[i+1].split(':')[1].strip())
 		info['Max DM'] = float(content[i+2].split(':')[1].strip())
@@ -364,6 +362,10 @@ def plot_pulses(dir, pulses, fileroot):
 	fig.savefig('%s_single_pulses.png'%fileroot)
 	plt.show()
 
+def run_rrattrap(dir):
+	subprocess.call('python rrattrap.py --use-configfile --use-DMplan --vary-group-size --inffile \
+					../*rfifind.inf -o rrattrap_test *pulse', cwd=dir+'/', shell=True)
+
 def save_obj(obj, name):
     with open(os.getcwd()+'/'+name+'.pkl', 'wb') as f:
         pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
@@ -374,72 +376,76 @@ def load_obj(name):
         return pickle.load(f)      
 
 def main():
-    input_filename = sys.argv[1]
-    fileroot = input_filename.split('.')[0]
-    dash = '---------------'
+	input_filename = sys.argv[1]
+	fileroot = input_filename.split('.')[0]
+	dash = '---------------'
     
-    print("%sSTART READING DATA HEADER%s"%(dash, dash))
+	print("%sSTART READING DATA HEADER%s"%(dash, dash))
     #If there exists a data header file associated, read it; otherwise, generate header file
-    #if not os.path.isfile(fileroot+'_DataHeader.pkl'):
-    header = run_readfile(input_filename)
-    #    save_obj(header, fileroot+'_DataHeader')
-    #else:
-    #    header = load_obj(fileroot+'_DataHeader')
-    #dbgmsg('Header: %s'%header)
-    print("%sDONE READING%s%s\n"%(dash, dash, dash))
+	if not os.path.isfile(fileroot+'_DataHeader.pkl'):
+		header = run_readfile(input_filename)
+		save_obj(header, fileroot+'_DataHeader')
+	else:
+		header = load_obj(fileroot+'_DataHeader')
+	dbgmsg('Header: %s'%header)
+	print("%sDONE READING%s%s\n"%(dash, dash, dash))
 
     #Source name is the telescope name
-    source_name = header['Source Name']
-    print('SOURCE: %s\n'%source_name)
+	source_name = header['Source Name']
+	print('SOURCE: %s\n'%source_name)
  
     #If there exists a DDplan file associated, read it; otherwise, generate DDplan header file
     #hidm: DM upper limit(lower limit 0.00), nsub: number of subbands, timeres: acceptable time resolution in ms
-    print("%sSTART DDPLAN%s"%(dash, dash))
-    hidm = '1000'
-    nsub = '128'
-    timeres = '1'               
+	print("%sSTART DDPLAN%s"%(dash, dash))
+	hidm = '1000'
+	nsub = '128'
+	timeres = '1'               
     #if not os.path.isfile(source_name+'_DDplanHeader.pkl'):
-    plan_header = run_DDplan(header, hidm, nsub, timeres)
+	plan_header = run_DDplan(header, hidm, nsub, timeres)
     #    save_obj(plan_header, source_name+'_DDplanHeader')
     #else:
     #    plan_header = load_obj(source_name+'_DDplanHeader')
-    dbgmsg('Plan Header: %s'%plan_header, 'nsub=%s'%nsub)
-    print("%sDONE DDPLAN%s\n"%(dash, dash))
+	dbgmsg('Plan Header: %s'%plan_header, 'nsub=%s'%nsub)
+	print("%sDONE DDPLAN%s\n"%(dash, dash))
 
     #If there exists the RFI files, especially the mask, read them; otherwise, generate the RFI files
     #rfifind_time_interval: time interval for maskng in seconds
-    #clip: remove the time interval where the SNR is above clip at zero DM; that signal is considered RFI
-    #specify other options to run rfifind in the last input argument
-    print("%sSTART FINDING RFI%s"%(dash, dash))
-    rfifind_time_interval = 5.0
-    clip = 6.0						
-    #if not os.path.isfile(fileroot+'_rfifind.mask'):
-    #maskname = run_rfifind(input_filename, rfifind_time_interval, '-zerodm -clip %.1f'%clip)
-    #else:
-    #     maskname = fileroot+'_rfifind.mask'
-    #dbgmsg('Mask Name: %s'%maskname)
-    print("%sDONE FINDING RFI%s\n"%(dash, dash))
+	#clip: remove the time interval where the SNR is above clip at zero DM; that signal is considered RFI (default 6.0)
+	#specify other options to run rfifind in the last input argument
+	print("%sSTART FINDING RFI%s"%(dash, dash))
+	rfifind_time_interval = 1.0
+	clip = 6.0						
+	#if not os.path.isfile(fileroot+'_rfifind.mask'):
+	#maskname = run_rfifind(input_filename, rfifind_time_interval, '-zerodm -clip %.1f'%clip)
+	#else:
+	#     maskname = fileroot+'_rfifind.mask'
+	#dbgmsg('Mask Name: %s'%maskname)
+	print("%sDONE FINDING RFI%s\n"%(dash, dash))
+	
+	#Prepare subbands
+	print("%sSTART PREPARING SUBBANDS & SINGLE PULSE SEARCH%s"%(dash, dash))
+	#output_dir = run_prepsubband(input_filename, plan_header, maskname, nsub)
+	output_dir = '/home/presto/workspace/17-02-08-incoherent/frb_search_1/composition_p1_subbands'
+	print("%sDONE SINGLE PULSE SEARCH & FILES MOVED%s\n"%(dash, dash))
 
-    #Prepare subbands
-    print("%sSTART PREPARING SUBBANDS & SINGLE PULSE SEARCH%s"%(dash, dash))
-    #output_dir = run_prepsubband(input_filename, plan_header, maskname, nsub)
-    output_dir = '/home/presto/workspace/17-02-08-incoherent/frb_search_1/composition_p1_subbands'
-    print("%sDONE SINGLE PULSE SEARCH & FILES MOVED%s\n"%(dash, dash))
+	#Do single pulse search based on the gourp specified
+	#group: the number fo DMs grouped together to generate the folded plot
+	print("%sSTART PREPARING SUBBANDS & SINGLE PULSE SEARCH%s"%(dash, dash))
+	group = 100
+	#group_single_pulse_search_plot(input_filename, plan_header, output_dir, group)
+	print("%sDONE SINGLE PULSE SEARCH & FILES MOVED%s\n"%(dash, dash))
 
-    #Do single pulse search based on the gourp specified
-    #group: the number fo DMs grouped together to generate the folded plot
-    print("%sSTART PREPARING SUBBANDS & SINGLE PULSE SEARCH%s"%(dash, dash))
-    group = 100
-    #group_single_pulse_search_plot(input_filename, plan_header, output_dir, group)
-    print("%sDONE SINGLE PULSE SEARCH & FILES MOVED%s\n"%(dash, dash))
-    
-    print("%sSTART GROUPING PULSES%s"%(dash, dash))
-    pulses = read_pulses(output_dir)
-    print("%sDONE GROUPING PULSES%s\n"%(dash, dash))
-
-    print("%sSTART %s"%(dash, dash))
-    plot_pulses(output_dir, pulses, fileroot)
-    print("%sDONE GROUPING PULSES%s\n"%(dash, dash))
+	print("%sSTART RRATTRAPS%s"%(dash, dash))
+	run_rrattrap(output_dir)
+	print("%sDONE RRATTRAPS%s\n"%(dash, dash))
+	
+	print("%sSTART GROUPING PULSES%s"%(dash, dash))
+	pulses = read_pulses(output_dir)
+	print("%sDONE GROUPING PULSES%s\n"%(dash, dash))
+	
+	print("%sSTART %s"%(dash, dash))
+	plot_pulses(output_dir, pulses, fileroot)
+	print("%sDONE GROUPING PULSES%s\n"%(dash, dash))
     
 if __name__ == "__main__":
     main()
