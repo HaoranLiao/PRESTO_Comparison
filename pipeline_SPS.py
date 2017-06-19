@@ -416,7 +416,7 @@ def main():
 	rfifind_time_interval = 1.0
 	clip = 6.0						
 	#if not os.path.isfile(fileroot+'_rfifind.mask'):
-	#maskname = run_rfifind(input_filename, rfifind_time_interval, '-zerodm -clip %.1f'%clip)
+	maskname = run_rfifind(input_filename, rfifind_time_interval, '-zerodm -clip %.1f'%clip)
 	#else:
 	#     maskname = fileroot+'_rfifind.mask'
 	#dbgmsg('Mask Name: %s'%maskname)
@@ -424,27 +424,27 @@ def main():
 	
 	#Prepare subbands
 	print("%sSTART PREPARING SUBBANDS & SINGLE PULSE SEARCH%s"%(dash, dash))
-	#output_dir = run_prepsubband(input_filename, plan_header, maskname, nsub)
-	output_dir = '/home/presto/workspace/17-02-08-incoherent/frb_search_1/composition_p1_subbands'
+	output_dir = run_prepsubband(input_filename, plan_header, maskname, nsub)
+	#output_dir = '/home/presto/workspace/17-02-08-incoherent/frb_search_1/composition_p1_subbands'
 	print("%sDONE SINGLE PULSE SEARCH & FILES MOVED%s\n"%(dash, dash))
 
 	#Do single pulse search based on the gourp specified
 	#group: the number fo DMs grouped together to generate the folded plot
 	print("%sSTART PREPARING SUBBANDS & SINGLE PULSE SEARCH%s"%(dash, dash))
-	group = 100
-	#group_single_pulse_search_plot(input_filename, plan_header, output_dir, group)
+	group = 50
+	group_single_pulse_search_plot(input_filename, plan_header, output_dir, group)
 	print("%sDONE SINGLE PULSE SEARCH & FILES MOVED%s\n"%(dash, dash))
 
 	print("%sSTART RRATTRAPS%s"%(dash, dash))
-	run_rrattrap(output_dir)
+	#run_rrattrap(output_dir)
 	print("%sDONE RRATTRAPS%s\n"%(dash, dash))
 	
 	print("%sSTART GROUPING PULSES%s"%(dash, dash))
-	pulses = read_pulses(output_dir)
+	#pulses = read_pulses(output_dir)
 	print("%sDONE GROUPING PULSES%s\n"%(dash, dash))
 	
 	print("%sSTART %s"%(dash, dash))
-	plot_pulses(output_dir, pulses, fileroot)
+	#plot_pulses(output_dir, pulses, fileroot)
 	print("%sDONE GROUPING PULSES%s\n"%(dash, dash))
     
 if __name__ == "__main__":
