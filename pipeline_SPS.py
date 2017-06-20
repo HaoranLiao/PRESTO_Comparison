@@ -328,7 +328,7 @@ def read_pulses(dir):
 	if content[i].startswith('Group'):
 	    rank = content[i+6].split()[1].strip()
 	    rank = float(rank)
-	    if rank==7.0 or rank==6.0 or rank==5.0:
+	    if rank==7.0 or rank==6.0 or rank==5.0 or rank==4.0:
 		info['Min DM'] = float(content[i+1].split(':')[1].strip())
 		info['Max DM'] = float(content[i+2].split(':')[1].strip())
 		info['Center time'] =  float(content[i+3].split(':')[1].strip())
@@ -345,20 +345,33 @@ def plot_pulses(dir, pulses, fileroot):
 	os.chdir(dir)
 	fig = plt.figure()
 	for pul in pulses:
-		c = []
-		c.append(pul['Rank'])
+		c = pul['Rank']
+		#c = []
+		#c.append(pul['Rank'])
 		cen_dm = pul['Min DM']+(pul['Max DM']-pul['Min DM'])/2
-		c = ['red' if x==7.0 else 'blue' if x==6.0 else 'green' if x==5.0 else x for x in c]
+		#c = ['red' if x==7.0 else 'blue' if x==4.0 else 'green' if x==5.0 else x for x in c]
+		#c = ['yellow' if x==4.0 else x for x in c]
+		if c==7.0:
+			c = 'red'
+		elif c==6.0:
+			c = 'blue'
+		elif c==5.0:
+			c = 'green'
+		elif c==4.0:
+			c = 'yellow'
+		else:
+			c = 'white'
 		plt.errorbar(pul['Center time'], cen_dm,\
 					 xerr=pul['Duration']/2, yerr=(pul['Max DM']-pul['Min DM'])/2,\
-					 marker='.', c=c[0], linestyle='None', markersize='3', elinewidth=1, capsize=0)
+					 marker='.', c=c, linestyle='None', markersize='3', elinewidth=1, capsize=0)
 	plt.title('Single Pulses')
 	plt.xlabel('Time (s)')
 	plt.ylabel('DM Range')
 	red_patch = mpatches.Patch(color='red', label='Rank 7')
 	blue_patch = mpatches.Patch(color='blue', label='Rank 6')
 	green_patch = mpatches.Patch(color='green', label='Rank 5')
-	plt.legend(handles=[red_patch, blue_patch, green_patch])
+	yellow_patch = mpatches.Patch(color='yellow', label='Rank 4')
+	plt.legend(handles=[red_patch, blue_patch, green_patch, yellow_patch])
 	fig.savefig('%s_single_pulses.png'%fileroot)
 	plt.show()
 
@@ -416,7 +429,7 @@ def main():
 	rfifind_time_interval = 1.0
 	clip = 6.0						
 	#if not os.path.isfile(fileroot+'_rfifind.mask'):
-	maskname = run_rfifind(input_filename, rfifind_time_interval, '-zerodm -clip %.1f'%clip)
+	#maskname = run_rfifind(input_filename, rfifind_time_interval, '-clip %.1f'%clip)
 	#else:
 	#     maskname = fileroot+'_rfifind.mask'
 	#dbgmsg('Mask Name: %s'%maskname)
@@ -424,15 +437,15 @@ def main():
 	
 	#Prepare subbands
 	print("%sSTART PREPARING SUBBANDS & SINGLE PULSE SEARCH%s"%(dash, dash))
-	output_dir = run_prepsubband(input_filename, plan_header, maskname, nsub)
-	#output_dir = '/home/presto/workspace/17-02-08-incoherent/frb_search_1/composition_p1_subbands'
+	#output_dir = run_prepsubband(input_filename, plan_header, maskname, nsub)
+	output_dir = '/home/presto/workspace/17-02-08-incoherent/frb_search_1/composition_p1_subbands'
 	print("%sDONE SINGLE PULSE SEARCH & FILES MOVED%s\n"%(dash, dash))
 
 	#Do single pulse search based on the gourp specified
 	#group: the number fo DMs grouped together to generate the folded plot
 	print("%sSTART PREPARING SUBBANDS & SINGLE PULSE SEARCH%s"%(dash, dash))
-	group = 50
-	group_single_pulse_search_plot(input_filename, plan_header, output_dir, group)
+	group = 100
+	#group_single_pulse_search_plot(input_filename, plan_header, output_dir, group)
 	print("%sDONE SINGLE PULSE SEARCH & FILES MOVED%s\n"%(dash, dash))
 
 	print("%sSTART RRATTRAPS%s"%(dash, dash))
@@ -440,12 +453,14 @@ def main():
 	print("%sDONE RRATTRAPS%s\n"%(dash, dash))
 	
 	print("%sSTART GROUPING PULSES%s"%(dash, dash))
-	#pulses = read_pulses(output_dir)
+	pulses = read_pulses(output_dir)
 	print("%sDONE GROUPING PULSES%s\n"%(dash, dash))
 	
 	print("%sSTART %s"%(dash, dash))
-	#plot_pulses(output_dir, pulses, fileroot)
+	plot_pulses(output_dir, pulses, fileroot)
 	print("%sDONE GROUPING PULSES%s\n"%(dash, dash))
+
+
     
 if __name__ == "__main__":
     main()
