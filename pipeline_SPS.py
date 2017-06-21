@@ -180,8 +180,8 @@ def run_prepsubband(input_filename, plan_header, maskname, nsub):
                              	     '-downsamp', downsamp,\
                              	     '-nobary',\
                              	     '-nsub', nsub,\
-                             	     '-o', output_fileroot, input_filename,\
-                             	     '-mask', maskname],\
+                             	     '-o', output_fileroot, input_filename],\
+                             	     #'-mask', maskname],\
                              	     shell=False)
                     dir = move_subbands(output_fileroot)
                  
@@ -194,8 +194,8 @@ def run_prepsubband(input_filename, plan_header, maskname, nsub):
                                  '-downsamp', downsamp,\
                                  '-nobary',\
                         	 '-nsub', nsub,\
-                        	 '-o', output_fileroot, input_filename,\
-                        	 '-mask', maskname],\
+                        	 '-o', output_fileroot, input_filename],\
+                        	 #'-mask', maskname],\
                         	 shell=False)
 		dir = move_subbands(output_fileroot)	    	
 		
@@ -274,7 +274,7 @@ def move_subbands(fileroot):
     #Move all subbands to the subfloder with the same data name
 
     current_path = os.getcwd()
-    dir = current_path+"/"+fileroot+"_subbands"
+    dir = current_path+"/"+fileroot+"_subbands_nomask"
     if not os.path.exists(dir):
         os.makedirs(dir)
     files = os.listdir(current_path)
@@ -324,22 +324,47 @@ def read_pulses(dir):
     pulse = []
     count = 0
     for i in range(len(content)):
-	info = {}
-	if content[i].startswith('Group'):
-	    rank = content[i+6].split()[1].strip()
-	    rank = float(rank)
-	    if rank==7.0 or rank==6.0 or rank==5.0 or rank==4.0:
-		info['Min DM'] = float(content[i+1].split(':')[1].strip())
-		info['Max DM'] = float(content[i+2].split(':')[1].strip())
-		info['Center time'] =  float(content[i+3].split(':')[1].strip())
-		info['Duration'] = float(content[i+4].split(':')[1].strip())
-		info['Max Sigma'] = float(content[i+5].split(':')[1].strip())
-		info['Rank'] = rank
-		pulse.append(info)
-		count += 1
+		info = {}
+		if content[i].startswith('Group'):
+			rank = float(content[i+6].split()[1].strip())
+			if rank==7.0 or rank==6.0 or rank==5.0 or rank==4.0:
+				info['Min DM'] = float(content[i+1].split(':')[1].strip())
+				info['Max DM'] = float(content[i+2].split(':')[1].strip())
+				info['Center time'] =  float(content[i+3].split(':')[1].strip())
+				info['Duration'] = float(content[i+4].split(':')[1].strip())
+				info['Max Sigma'] = float(content[i+5].split(':')[1].strip())
+				info['Rank'] = rank
+				pulse.append(info)
+				count += 1
     dbgmsg(pulse, count)
    
     return pulse
+
+def read_pulses_specific(dir, lodm, hidm, lotime, hitime):
+	os.chdir(dir)
+	with open('rrattrap_testgroups.txt') as f:
+		content = f.readlines()
+	content = [x.strip() for x in content]
+	pulse = []
+	count = 0
+	for i in range(len(content)):
+		info = {}
+		if content[i].startswith('Group'):
+			rank = float(content[i+6].split()[1].strip())
+			if rank==7.0 or rank ==6.0 or rank==5.0 or rank==4.0:
+				info['Min DM'] = float(content[i+1].split(':')[1].strip())
+				info['Max DM'] = float(content[i+2].split(':')[1].strip())
+				info['Center time'] =  float(content[i+3].split(':')[1].strip())
+				info['Duration'] = float(content[i+4].split(':')[1].strip())
+				info['Max Sigma'] = float(content[i+5].split(':')[1].strip())
+				info['Rank'] = rank
+				if info['Center time']>=lotime and info['Center time']<=hitime\
+				  and info['Min DM']>=lodm and info['Max DM']<=hidm:
+					pulse.append(info)
+					count +=1
+	dbgmsg(pulse, count)
+
+	return pulse
 
 def plot_pulses(dir, pulses, fileroot):
 	os.chdir(dir)
@@ -372,7 +397,7 @@ def plot_pulses(dir, pulses, fileroot):
 	green_patch = mpatches.Patch(color='green', label='Rank 5')
 	yellow_patch = mpatches.Patch(color='yellow', label='Rank 4')
 	plt.legend(handles=[red_patch, blue_patch, green_patch, yellow_patch])
-	fig.savefig('%s_single_pulses.png'%fileroot)
+	#fig.savefig('%s_single_pulses.png'%fileroot)
 	plt.show()
 
 def run_rrattrap(dir):
@@ -431,29 +456,29 @@ def main():
 	#if not os.path.isfile(fileroot+'_rfifind.mask'):
 	#maskname = run_rfifind(input_filename, rfifind_time_interval, '-clip %.1f'%clip)
 	#else:
-	#     maskname = fileroot+'_rfifind.mask'
+	maskname = fileroot+'_rfifind.mask'
 	#dbgmsg('Mask Name: %s'%maskname)
 	print("%sDONE FINDING RFI%s\n"%(dash, dash))
 	
 	#Prepare subbands
 	print("%sSTART PREPARING SUBBANDS & SINGLE PULSE SEARCH%s"%(dash, dash))
-	#output_dir = run_prepsubband(input_filename, plan_header, maskname, nsub)
-	output_dir = '/home/presto/workspace/17-02-08-incoherent/frb_search_1/composition_p1_subbands'
+	output_dir = run_prepsubband(input_filename, plan_header, maskname, nsub)
+	#output_dir = '/home/presto/workspace/17-02-08-incoherent/frb_search_1/composition_p1_subbands'
 	print("%sDONE SINGLE PULSE SEARCH & FILES MOVED%s\n"%(dash, dash))
 
 	#Do single pulse search based on the gourp specified
 	#group: the number fo DMs grouped together to generate the folded plot
 	print("%sSTART PREPARING SUBBANDS & SINGLE PULSE SEARCH%s"%(dash, dash))
 	group = 100
-	#group_single_pulse_search_plot(input_filename, plan_header, output_dir, group)
+	group_single_pulse_search_plot(input_filename, plan_header, output_dir, group)
 	print("%sDONE SINGLE PULSE SEARCH & FILES MOVED%s\n"%(dash, dash))
 
 	print("%sSTART RRATTRAPS%s"%(dash, dash))
-	#run_rrattrap(output_dir)
+	run_rrattrap(output_dir)
 	print("%sDONE RRATTRAPS%s\n"%(dash, dash))
 	
 	print("%sSTART GROUPING PULSES%s"%(dash, dash))
-	pulses = read_pulses(output_dir)
+	pulses = read_pulses_specific(output_dir, 0.0, 50.0, 0.0, 500.0)
 	print("%sDONE GROUPING PULSES%s\n"%(dash, dash))
 	
 	print("%sSTART %s"%(dash, dash))
