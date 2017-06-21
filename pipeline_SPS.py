@@ -482,7 +482,7 @@ def main():
 	print("%sDONE GROUPING PULSES%s\n"%(dash, dash))
 	
 	print("%sSTART %s"%(dash, dash))
-	plot_pulses(output_dir, pulses, fileroot)
+	#plot_pulses(output_dir, pulses, fileroot)
 	print("%sDONE GROUPING PULSES%s\n"%(dash, dash))
 
 
