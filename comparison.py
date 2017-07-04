@@ -130,10 +130,15 @@ def plot(comp, l1, rra):
 def time_histo(array):
 	import matplotlib.pyplot as plt
 	array.sort()
+	print(len(array))
 	diff = []
+	dup_count = 0
 	for i in range(len(array)):
 		if i>0:
 			diff.append(array[i]-array[i-1])
+			if array[i]-array[i-1]<0.3:
+				dup_count += 1
+	print(dup_count)
 	n, bins, patches = plt.hist(diff, 40, range=[0,8],facecolor='black', align='mid')
 	plt.title('Neigbhouring Detections Time Separation')
 	plt.xlabel('Time (s)')
@@ -199,11 +204,11 @@ def main():
 	#comp = compare2(l1_result, rrattrap_result, 0.2)
 	#plot(comp, l1_result, rrattrap_result)
 	#time_histo(rrattrap_result['ct'])
-	#time_histo(l1_result['t'])
+	time_histo(l1_result['t'])
 	#print(l1_result['t'][0])
 	#print(rrattrap
-	series_filled_l1, count = fill_t_series(0.71446, l1_result['t'])
-	series_filled_full_l1 = fill_full_series(series_filled_l1, l1_result, count)
+	#series_filled_l1, count = fill_t_series(0.71446, l1_result['t'])
+	#series_filled_full_l1 = fill_full_series(series_filled_l1, l1_result, count)
 
 
 if __name__=='__main__':
