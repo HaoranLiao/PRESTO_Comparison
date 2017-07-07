@@ -1,4 +1,4 @@
-import sys
+iport sys
 import numpy as np
 
 def plot(t, dm, basenm):
