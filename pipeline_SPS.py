@@ -180,8 +180,8 @@ def run_prepsubband(input_filename, plan_header, maskname, nsub):
                              	     '-downsamp', downsamp,\
                              	     '-nobary',\
                              	     '-nsub', nsub,\
-                             	     '-o', output_fileroot, input_filename],\
-                             	     #'-mask', maskname],\
+                             	     '-o', output_fileroot, input_filename,\
+                             	     '-mask', maskname],\
                              	     shell=False)
                     dir = move_subbands(output_fileroot)
                  
@@ -194,8 +194,8 @@ def run_prepsubband(input_filename, plan_header, maskname, nsub):
                                  '-downsamp', downsamp,\
                                  '-nobary',\
                         	 '-nsub', nsub,\
-                        	 '-o', output_fileroot, input_filename],\
-                        	 #'-mask', maskname],\
+                        	 '-o', output_fileroot, input_filename,\
+                        	 '-mask', maskname],\
                         	 shell=False)
 		dir = move_subbands(output_fileroot)	    	
 		
@@ -274,7 +274,8 @@ def move_subbands(fileroot):
     #Move all subbands to the subfloder with the same data name
 
     current_path = os.getcwd()
-    dir = current_path+"/"+fileroot+"_subbands_nomask"
+    dir = current_path+"/"+fileroot+"_subbands"
+    #dir = current_path+"/"+fileroot+"_subbands_nomask"
     if not os.path.exists(dir):
         os.makedirs(dir)
     files = os.listdir(current_path)
@@ -356,9 +357,13 @@ def read_pulses_specific(dir, lodm, hidm, lotime, hitime):
 				info['Max DM'] = float(content[i+2].split(':')[1].strip())
 				info['Center time'] =  float(content[i+3].split(':')[1].strip())
 				info['Duration'] = float(content[i+4].split(':')[1].strip())
-				info['Max Sigma'] = float(content[i+5].split(':')[1].strip())
+				info['Max Sigma'] = round(float(content[i+5].split(':')[1].strip()),2)
 				info['Rank'] = rank
-				if info['Center time']>=lotime and info['Center time']<=hitime\
+			j = 7
+			while content[i+j].split()[1].strip() != info['Max Sigma']:
+				j += 1
+			print(j)
+			if info['Center time']>=lotime and info['Center time']<=hitime\
 				  and info['Min DM']>=lodm and info['Max DM']<=hidm:
 					pulse.append(info)
 					count +=1
@@ -435,7 +440,7 @@ def main():
     #If there exists a DDplan file associated, read it; otherwise, generate DDplan header file
     #hidm: DM upper limit(lower limit 0.00), nsub: number of subbands, timeres: acceptable time resolution in ms
 	print("%sSTART DDPLAN%s"%(dash, dash))
-	hidm = '1000'
+	hidm = '50'
 	nsub = '128'
 	timeres = '1'               
     #if not os.path.isfile(source_name+'_DDplanHeader.pkl'):
@@ -451,26 +456,28 @@ def main():
 	#clip: remove the time interval where the SNR is above clip at zero DM; that signal is considered RFI (default 6.0)
 	#specify other options to run rfifind in the last input argument
 	print("%sSTART FINDING RFI%s"%(dash, dash))
-	rfifind_time_interval = 1.0
+	rfifind_time_interval = 0.5
 	clip = 6.0						
 	#if not os.path.isfile(fileroot+'_rfifind.mask'):
 	#maskname = run_rfifind(input_filename, rfifind_time_interval, '-clip %.1f'%clip)
 	#else:
-	maskname = fileroot+'_rfifind.mask'
+	#maskname = fileroot+'_rfifind.mask'
 	#dbgmsg('Mask Name: %s'%maskname)
 	print("%sDONE FINDING RFI%s\n"%(dash, dash))
 	
 	#Prepare subbands
 	print("%sSTART PREPARING SUBBANDS & SINGLE PULSE SEARCH%s"%(dash, dash))
-	output_dir = run_prepsubband(input_filename, plan_header, maskname, nsub)
+	#output_dir = run_prepsubband(input_filename, plan_header, maskname, nsub)
 	#output_dir = '/home/presto/workspace/17-02-08-incoherent/frb_search_1/composition_p1_subbands'
+	output_dir = '/home/presto/workspace/17-02-08-incoherent/frb_search_1/example2_raw_subbands'
+	#output_dir = '/home/presto/workspace/17-02-08-incoherent/frb_search_1/example2_badchanmask_subbands'
 	print("%sDONE SINGLE PULSE SEARCH & FILES MOVED%s\n"%(dash, dash))
 
 	#Do single pulse search based on the gourp specified
 	#group: the number fo DMs grouped together to generate the folded plot
 	print("%sSTART PREPARING SUBBANDS & SINGLE PULSE SEARCH%s"%(dash, dash))
-	group = 100
-	group_single_pulse_search_plot(input_filename, plan_header, output_dir, group)
+	group = 50
+	#group_single_pulse_search_plot(input_filename, plan_header, output_dir, group)
 	print("%sDONE SINGLE PULSE SEARCH & FILES MOVED%s\n"%(dash, dash))
 
 	print("%sSTART RRATTRAPS%s"%(dash, dash))
@@ -482,7 +489,7 @@ def main():
 	print("%sDONE GROUPING PULSES%s\n"%(dash, dash))
 	
 	print("%sSTART %s"%(dash, dash))
-	#plot_pulses(output_dir, pulses, fileroot)
+	plot_pulses(output_dir, pulses, fileroot)
 	print("%sDONE GROUPING PULSES%s\n"%(dash, dash))
 
 
