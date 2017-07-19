@@ -160,7 +160,7 @@ def remove_npy_dup(data, p):
 	data = data
 	print(len(data['time']))
 	ind = []
-	for i in range(310):
+	for i in range(len(data)):
 		if i>0:
 			diff = data['time'][i]-data['time'][i-1]
 			#print(diff)
@@ -172,7 +172,11 @@ def remove_npy_dup(data, p):
 
 
 def snr_plot(snr, sps=None):
-	n, bins, _ = plt.hist(snr, bins=np.arange(0, 50, 2), range=[0,50], histtype='step', color='black', align='mid')
+	if sps is None:
+		xmax = 50
+	else:
+		xmax = 30
+	n, bins, _ = plt.hist(snr, bins=np.arange(0, xmax, 2), range=[0,xmax], histtype='step', color='black', align='mid')
 	mid = 0.5*(bins[1:] + bins[:-1])
 	plt.errorbar(mid, n, yerr=np.sqrt(n), fmt=None, c='black', capsize=2, lw=1)
 	plt.xlabel('Signal-to-noise Ration')
@@ -182,6 +186,8 @@ def snr_plot(snr, sps=None):
 		plt.title('Detection SNR by Single Pulse Search (DM %s)'%sps)
 	plt.ylabel('Count')
 	ax = plt.gca()
+	ax.set_xlim([0, xmax])
+	ax.set_ylim([0,100])
 	plt.savefig('snr_sps_DM%s.png'%sps)
 	plt.show()
 
