@@ -1,9 +1,13 @@
 import numpy as np
 import sys
 import matplotlib.pyplot as plt
+import matplotlib.pylab
+from scipy.optimize import curve_fit
 
+def lin_func_no_intercept(x, k):
+	return k*x
 
-def readsps(infilenm):
+def readsps(infilenm, off):
 	basenm = infilenm.split('.')[0]
 	with open(infilenm) as f:
 		lines = f.readlines()
@@ -16,7 +20,7 @@ def readsps(infilenm):
 		entry = curr_line.split()
 		dm, sigma, time, sample, downfact = round(float(entry[0].strip()),2), round(float(entry[1].strip()),2), round(float(entry[2].strip()),4), \
 											entry[3].strip(), entry[4].strip()
-		x[i] = (dm, sigma, time+0.714, sample, downfact)
+		x[i] = (dm, sigma, time+off, sample, downfact)
 	x = x[np.argsort(x['time'])]
 	return x
 
@@ -203,7 +207,7 @@ def remove_npy_dup(data, p):
 	data = data
 	print(len(data['time']))
 	ind = []
-	for i in range(310):
+	for i in range(len(data)):
 		if i>0:
 			diff = data['time'][i]-data['time'][i-1]
 			#print(diff)
@@ -235,56 +239,89 @@ def plot_snr_compare(npy_fullresult, sps_fullresult):
 			snr_sps_only.append(sps_fullresult[i]['sigma'])
 			time_sps_only.append(sps_fullresult[i]['time'])
 
+	#print('The sps only: \n%s'%time_sps_only)
+
 	diff_both = []
 	for i in range(len(time_sps_both)):
 		diff_both.append(snr_sps_both[i]-snr_npy_both[i])
 	print(len(diff_both))
 	print(len(time_sps_both))
 
-	fig = plt.figure()
+	fig = plt.figure(figsize=(6,6))
 	ax = plt.gca()
 	#ax.set_ylim([0, 30])
 	low_num = 1
 	high_num = 20
 	diff_ratio_both = []
-	for i in range(len(time_sps_both)-1):
-		diff_ratio_both.append(snr_sps_both[i]/25-snr_npy_both[i+1]/50)
+	for i in range(len(time_sps_both)):
+		diff_ratio_both.append(snr_sps_both[i]/25-snr_npy_both[i]/50)
+
+	
+
 
 	#plt.title('Single Pulse Search SNR at DM26.40 $pc cm^{-3}$ compared to L1 (Threshold 10)')
-	plt.title('Single Pulse Search SNR Percentage versus L1 SNR Percentage')
+	plt.title('L1 Detection SNR versus Single Pulse Search Detection SNR')
 	#plt.scatter(time_sps_both[low_num:high_num], [x / 25 for x in snr_sps_both[low_num:high_num]], marker='x', c='black', linestyle='None', s=10, label='Single Pulse Search detections SNR')
 	#plt.scatter(snr_sps_both[0:-2], snr_npy_both[1:-1], s=5)
-	plt.scatter(snr_sps_both, snr_npy_both, s=5)
-	plt.scatter(snr_sps_only, [0]*len(snr_sps_only), s=5)
-	plt.scatter([0]*len(snr_npy_only), snr_npy_only, s=5)
+	snr_both = plt.scatter(snr_sps_both, snr_npy_both, s=5, c='black')
+	snr_sps = plt.scatter(snr_sps_only, [0]*len(snr_sps_only), s=8, c='blue')
+	snr_npy = plt.scatter([0]*len(snr_npy_only), snr_npy_only, s=8, c='green')
 	#plt.scatter(snr_npy_only)
 	#plt.scatter(time_sps_only, snr_sps_only, marker='x', c='red', linestyle='None', s=10, label='Only detected by SPS')
 	#plt.scatter(time_npy_both[low_num:high_num], [x / 50 for x in snr_npy_both[low_num:high_num]], marker='x', c='red', linestyle='None', s=10, label='L1 detection SNR')
 	#plt.scatter(time_npy_both, diff_both, marker='x', c='red', linestyle='None', s=10, label='Only detected by SPS')
-	plt.legend(loc='upper left')
 
+	plt.xlabel('Single Pulse Search Detection SNR')
+	plt.ylabel('L1 Detection SNR')
 	#print(np.corrcoef(snr_sps_both, snr_npy_both))[0, 1]
+	plt.axvline(x=5, color='k', linestyle='--', lw=0.5)
+	plt.axhline(y=7, color='k', linestyle='--', lw=0.5)
 	ax.set_ylim([0,50])
 	ax.set_xlim([0,50])
+	print(time_sps_only)
 	#for xc in time_npy_both[low_num:high_num]:
 	#	plt.axvline(x=xc, color='k', linestyle='--', lw=0.5)
 
+	# # calc the trendline
+	# z = np.polyfit(snr_sps_both, snr_npy_both, 1)
+	# p = np.poly1d(z)
+	x = np.linspace(0, np.max(snr_sps_both))
+	# plt.plot(x, p(x), "r--")
+	# # the line equation:
+	# print("y=%.6fx+(%.6f)"%(z[0],z[1]))
+
+	popt, pcov = curve_fit(lin_func_no_intercept, snr_sps_both, snr_npy_both)
+	perr = np.sqrt(np.diag(pcov))
+	lin_fit = plt.plot(x, lin_func_no_intercept(x, *popt), 'r--', label='linear fit zero intercept')
+	plt.legend(lin_fit, ['y=(%.2f$\pm$%.2f)$\cdot$x'%(popt[0], perr)], loc='upper right')
+
 	plt.show()
-	fig = plt.figure()
-	plt.scatter(time_sps_both[0:-2], diff_ratio_both, s=5)
-	plt.title('Difference between Single Pulse Search SNR Percentage and L1 SNR Percentage')
-	plt.axhline(y=-0.2, color='k', linestyle='--', lw=0.5)
-	plt.axhline(y=0.2, color='k', linestyle='--', lw=0.5)
-	plt.show()
+
+	# fig = plt.figure()
+	# plt.scatter(time_sps_both, diff_ratio_both, s=5)
+	# plt.title('Difference between Single Pulse Search SNR Percentage and L1 SNR Percentage')
+	# plt.axhline(y=-0.2, color='k', linestyle='--', lw=0.5)
+	# plt.axhline(y=0.2, color='k', linestyle='--', lw=0.5)
+	# #plt.show()
+	# #for i in range(len(time_sps_both)):
+		#print('%.1f    %.1f'%(time_sps_both[i],time_npy_both[i]))
+
+	time_diff_sum = 0
 	for i in range(len(time_sps_both)):
-		print('%.1f    %.1f'%(time_sps_both[i],time_npy_both[i]))
+		time_diff_sum += time_sps_both[i]-time_npy_both[i]
+
+	return time_diff_sum
 
 def main():
-	sps_result = readsps(sys.argv[1])
+	time_diff_sum_array = []
+	off = 0.475
+	#for off in np.arange(0.47, 0.5, 0.001):
+
+	sps_result = readsps(sys.argv[1], off)
 	npy_result = readnpy(sys.argv[2])
 	#npy2_result = readnpy(sys.argv[3])
 
-	offset = 0.2
+	offset = 0
 
 	npy_result = remove_npy_dup(npy_result, 0.714)
 	sps_result = remove_npy_dup(sps_result, 0.714)
@@ -309,7 +346,7 @@ def main():
 	count_sps_only = 0
 	for i in range(len(series_filled_sps)):
 		#print('%.1f    %.1f'%(series_filled_sps[i], series_filled_npy[i]))
-		print('%.1f    %.1f'%(series_filled_sps[i], series_filled_npy[i]))
+		#print('%.1f    %.1f'%(series_filled_sps[i], series_filled_npy[i]))
 		if series_filled_npy[i]!=0 and series_filled_sps[i]!=0:
 			count_both += 1
 		elif series_filled_npy[i]!=0 and series_filled_sps[i]==0:
@@ -323,8 +360,12 @@ def main():
 	print('number of npy only detection: %d'%count_npy_only)
 	print('number of all missed detection: %d'%count_bothmiss)
 
-	plot_snr_compare(series_filled_full_npy,series_filled_full_sps)
-	#print(series_filled_full_npy['snr'])
+	time_diff_sum = plot_snr_compare(series_filled_full_npy,series_filled_full_sps)
+
+		
+	# 	time_diff_sum_array.append('time offset %.3f diff sum %.3f'%(off, time_diff_sum))
+	# 	#print(series_filled_full_npy['snr'])
+	# print(time_diff_sum_array)
 
 if __name__=='__main__':
 	main()
