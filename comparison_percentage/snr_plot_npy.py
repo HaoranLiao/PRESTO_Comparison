@@ -174,41 +174,79 @@ def remove_npy_dup(data, p):
 
 
 def snr_plot(snr):
-	n, bins, _ = plt.hist(snr, bins=np.arange(0, 50, 2.5), range=[0,50], histtype='step', color='black', align='mid')
+	n, bins, _ = plt.hist(snr, bins=np.arange(0, 50, 2), range=[0,50], histtype='step', color='black', align='mid')
 	mid = 0.5*(bins[1:] + bins[:-1])
 	plt.errorbar(mid, n, yerr=np.sqrt(n), fmt=None, c='black', capsize=2, lw=1)
 	plt.xlabel('Signal-to-noise Ration')
-	plt.title('Distribution of Detection SNR By Single Pulse Search')
+	plt.title('Distribution of Detection SNR By L1')
 	plt.ylabel('Count')
 	ax = plt.gca()
 	plt.show()
 
 def snr_plot2(snr1, snr2):
-	n1, bins1, _ = plt.hist(snr1, bins=np.arange(0, 50, 2.5), range=[0,50], histtype='step', color='black', align='mid')
-	n2, bins2, _ = plt.hist(snr2, bins=np.arange(0, 50, 2.5), range=[0,50], histtype='step', color='red', align='mid')
+	fig = plt.figure()
+	n1, bins1, _ = plt.hist(snr1, bins=np.arange(0, 50, 2), range=[0,50], histtype='step', color='black', align='mid')
+	n2, bins2, _ = plt.hist(snr2, bins=np.arange(0, 50, 2), range=[0,50], histtype='step', color='red', align='mid')
 	mid1 = 0.5*(bins1[1:] + bins1[:-1])
 	#plt.errorbar(mid1, n1, yerr=np.sqrt(n1), fmt=None, c='black', capsize=2, lw=1)
 	mid2 = 0.5*(bins2[1:] + bins2[:-1])
 	#plt.errorbar(mid2, n2, yerr=np.sqrt(n2), fmt=None, c='red', capsize=2, lw=1)
 	plt.xlabel('Signal-to-noise Ration')
-	plt.title('Distribution of Detection SNR By Single Pulse Search')
+	plt.title('Distribution of Detection SNR By L1')
 	plt.ylabel('Count')
 	ax = plt.gca()
+	ax.set_xlim([0, 50])
+	plt.show()
+
+def tree_plot2(result1, result2):
+	fig = plt.figure()
+	n1, bins1, _ = plt.hist(result1['itree'], bins=np.arange(0, 4, 1), range=[0,4], histtype='step', color='black', align='right')
+	n2, bins2, _ = plt.hist(result2['itree'], bins=np.arange(0, 4, 1), range=[0,4], histtype='step', color='red', align='right')
+	mid1 = 0.5*(bins1[1:] + bins1[:-1])
+	#plt.errorbar(mid1, n1, yerr=np.sqrt(n1), fmt=None, c='black', capsize=2, lw=1)
+	mid2 = 0.5*(bins2[1:] + bins2[:-1])
+	#plt.errorbar(mid2, n2, yerr=np.sqrt(n2), fmt=None, c='red', capsize=2, lw=1)
+	plt.xlabel('Tree')
+	plt.title('Tree of Detection by L1')
+	plt.ylabel('Count')
+	ax = plt.gca()
+	plt.xticks(range(4))
 	plt.show()
 
 def main():
 
 	#sps_result = readsps(sys.argv[1])
-	npy_result = readnpy(sys.argv[1])
+	npy_result1 = readnpy(sys.argv[1])
 	npy_result2 = readnpy(sys.argv[2])
 	#print(npy_result['snr'])
 
-	npy_result = remove_npy_dup(npy_result, 0.714)
+	npy_result1 = remove_npy_dup(npy_result1, 0.714)
 	npy_result2 = remove_npy_dup(npy_result2, 0.714)
+
+	npy_result1_commonsnr = npy_result1
+	for x in npy_result1_commonsnr:
+		if x['snr']<10:
+			print(x)
+			i = np.where(npy_result1_commonsnr==x)
+			npy_result1_commonsnr = np.delete(npy_result1_commonsnr, i)
+	#print(len(npy_result1_commonsnr))
+
+	npy_result2_commonsnr = npy_result2
+	for x in npy_result2_commonsnr:
+		if x['snr']<10:
+			i = np.where(npy_result2_commonsnr==x)
+			npy_result2_commonsnr = np.delete(npy_result2_commonsnr, i)
+	#print(len(npy_result2_commonsnr))
+
 	#print(npy_result)
 	#print(len(npy_result))
-	snr_plot2(npy_result['snr'], npy_result2['snr'])
-	
+	snr_plot(npy_result1['snr'])
+	snr_plot(npy_result2['snr'])
+	snr_plot2(npy_result1['snr'], npy_result2['snr'])
+	snr_plot2(npy_result1_commonsnr['snr'], npy_result2_commonsnr['snr'])
+	tree_plot2(npy_result1_commonsnr, npy_result2_commonsnr)
+
+
 
 
 
