@@ -211,8 +211,9 @@ def remove_npy_dup(data, p):
 		if i>0:
 			diff = data['time'][i]-data['time'][i-1]
 			#print(diff)
-			if diff<0.5*p:
+			if diff<0.7*p:
 				ind.append(i)
+				#ind.append(i-1)
 	data = np.delete(data, ind)
 	print(len(data))
 	return data
@@ -327,6 +328,7 @@ def main():
 	sps_result = remove_npy_dup(sps_result, 0.714)
 
 	#time_histo(sps_result['time'])
+	time_histo(npy_result['time'])
 
 	series_filled_sps, count_sps = fill_t_series_sps(0.71446, sps_result['time'], offset)
 	series_filled_full_sps = fill_full_series_sps(series_filled_sps, sps_result, offset)
