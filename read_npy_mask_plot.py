@@ -4,37 +4,40 @@ import matplotlib.pyplot as plt
 import matplotlib
 from frb_L2_L3 import L1_event as ev
 
-def plot(data, basenm, timelim_low, timelim_high):
+def plot(ax, data, basenm, timelim_low, timelim_high):
 	dm_mean = np.mean(data['dm_best'])
 	dm_std = np.std(data['dm_best'])
 	dm_stderr = dm_std/len(data['dm_best'])
 	print(dm_mean)
 	print(dm_stderr)
 	#print(data['dm_best'])
-	import matplotlib.pyplot as plt
-	fig = plt.figure(figsize=(13, 4))
+	#fig = plt.figure(figsize=(13, 4))
 	for i in range(len(data)):
 		if data['time'][i]<=timelim_high and data['time'][i]>=timelim_low:
 			#plt.scatter(data['time'][i], data['dm_best'][i], s=data['snr'][i]/5
 			asym_err = [data['dm_best'][i]-data['dm_min'][i],data['dm_max'][i]-data['dm_best'][i]]
 			asym_err_2 = [data['dm_best'][i]-data['dm_best_min'][i],data['dm_best_max'][i]-data['dm_best'][i]]
 			#print(asym_err)
-			plt.errorbar(data['time'][i], data['dm_best'][i], yerr=[asym_err], marker='o', markersize=2, color='black', lw=0.5, capsize=0, capthick=0)
-			plt.errorbar(data['time'][i], data['dm_best'][i], yerr=[asym_err_2], marker='o', markersize=2, color='black', lw=0.5, capsize=1.5, capthick=0.5)
+			#plt.errorbar(data['time'][i], data['dm_best'][i], yerr=[asym_err], marker='o', markersize=2, color='black', lw=0.5, capsize=0, capthick=0)
+			#plt.errorbar(data['time'][i], data['dm_best'][i], yerr=[asym_err_2], marker='o', markersize=2, color='black', lw=0.5, capsize=1.5, capthick=0.5)
+			ax.errorbar(data['time'][i], data['dm_best'][i], yerr=[asym_err], marker='o', markersize=2, color='black', lw=0.5, capsize=0, capthick=0)
+			ax.errorbar(data['time'][i], data['dm_best'][i], yerr=[asym_err_2], marker='o', markersize=2, color='black', lw=0.5, capsize=1.5, capthick=0.5)
 			#plt.errorbar(data['time'][i], data['dm_best'][i], marker='o', markersize=data['snr'][i]/5, yerr=[data['dm_min'][i],data['dm_max'][i]])
-	axes = plt.gca()
-	axes.set_xlim([timelim_low, timelim_high])
-	axes.set_ylim([10,40])
-	plt.xlabel('Arrival Time ($s$)')
-	plt.ylabel('DM ($pc$ $cm^{-3}$)')
-	plt.title('Pulses Grouped by L1')
-	plt.yticks(np.arange(10, 50, 10))
+	#ax = plt.gca()
+	ax.set_xlim([timelim_low, timelim_high])
+	ax.set_ylim([0,50])
+	ax.set_ylabel('DM ($pc$ $cm^{-3}$)')
+	#plt.ylabel('DM ($pc$ $cm^{-3}$)')
+	#plt.yticks(np.arange(0, 60, 10))
 	x = np.linspace(timelim_low, timelim_high)
-	plt.plot(x, [dm_mean]*len(x), linestyle='--', lw=0.5, color='black')
-	plt.plot(x, [26.76]*len(x), linestyle='-', lw=0.5, color='red')
-	print('1111')
+	#plt.plot(x, [dm_mean]*len(x), linestyle='--', lw=0.5, color='black')
+	#plt.plot(x, [26.76]*len(x), linestyle='-', lw=0.5, color='red')
+	ax.plot(x, [dm_mean]*len(x), linestyle='--', lw=0.5, color='black')
+	ax.plot(x, [26.76]*len(x), linestyle='-', lw=0.5, color='red')
 	#fig.savefig('%s_pulses.png'%basenm)
-	plt.show()
+
+	
+	#plt.show()
 
 def time_histo(array):
 	import matplotlib.pyplot as plt
@@ -57,6 +60,31 @@ def time_histo(array):
 	axes.set_ylim([0,200])
 	plt.show()
 
+def shape(mask):
+	maskfrac = []
+	for i in range(len(mask)):
+		x = mask[i][mask[i]<=0.3]
+		maskfrac.append(x.size/float(mask[i].size))
+	bar_info = np.zeros(len(mask), dtype=[('left', np.float32), ('height', np.float32), ('width', np.float32)])
+	tsamp = 0.00131072
+	for i in range(len(mask)):
+		bar_info['height'][i] = maskfrac[i]
+		bar_info['width'][i] = len(mask[i])*tsamp
+		if i>0:
+			bar_info['left'][i] = bar_info['left'][i-1]+bar_info['width'][i-1]
+		else:
+			bar_info['left'][0] = 0
+	
+	for i in range(len(mask)):	
+		print('Left: %f   Width: %f   Height: %f'%(bar_info['left'][i],bar_info['width'][i],bar_info['height'][i]))
+	
+	return bar_info
+
+def plotbar(ax, maskfrac_bar):
+	ax.bar(maskfrac_bar['left'], maskfrac_bar['height'], maskfrac_bar['width'], color='b', alpha=0.5, align='center')
+	ax.set_ylabel('Masking Fraction')
+	#plt.ylabel('Masking Fraction')
+	#plt.show()
 
 def main():
 	infilenm = sys.argv[1]
@@ -91,15 +119,29 @@ def main():
 	#print(len(data))
 	#print(len(x))
 
+	fig, ax1 = plt.subplots()
+	ax2 = ax1.twinx()
+
 	#font = {'family' : 'normal',\
 	#		#'weight' : 'bold',\
 	#		'size'   : 16}
 
 	#matplotlib.rc('font', **font)
 
-	plot(x, basenm, 0, 200)
-	plot(x, basenm, 200, 410)
+	inmasknm = sys.argv[2]
+	mask = np.load(inmasknm)
+	maskfrac_bar = shape(mask)
+		
+	plot(ax1, x, basenm, 0, 410)
+	plotbar(ax2, maskfrac_bar)
+
+	#plot(x, basenm, 0, 200)
+	#plot(x, basenm, 200, 410)
 	#time_histo(x['time'])
+
+	ax1.set_title('Pulses Grouped by L1')
+	ax1.set_xlabel('Arrival Time ($s$)')
+	plt.show()
 
 if __name__ == "__main__":
     main()
