@@ -149,16 +149,16 @@ def time_histo(array):
     for i in range(len(array)):
         if i>0:
             diff.append(array[i]-array[i-1])
-            if array[i]-array[i-1]<0.3:
+            if array[i]-array[i-1]<0.5*0.714:
                 dup_count += 1
     print(dup_count)
     n, bins, patches = plt.hist(diff, 40, range=[0,8],facecolor='black', align='mid')
-    plt.title('PRESTO Neigbhouring Detections Time Separation')
+    plt.title('L1 Neigbhouring Detections Time Separation')
     plt.xlabel('Time (s)')
     plt.ylabel('Count')
     plt.xticks(np.arange(0,8,0.7))
     axes = plt.gca()
-    axes.set_ylim([0,200])
+    axes.set_ylim([0,350])
     plt.show()
 
 def fill_full_series_npy(series_filled, series_full):
@@ -211,7 +211,7 @@ def remove_npy_dup(data, p):
 		if i>0:
 			diff = data['time'][i]-data['time'][i-1]
 			#print(diff)
-			if diff<0.7*p:
+			if diff<0.5*p:
 				ind.append(i)
 				#ind.append(i-1)
 	data = np.delete(data, ind)
@@ -265,8 +265,8 @@ def plot_snr_compare(npy_fullresult, sps_fullresult):
 	#plt.scatter(time_sps_both[low_num:high_num], [x / 25 for x in snr_sps_both[low_num:high_num]], marker='x', c='black', linestyle='None', s=10, label='Single Pulse Search detections SNR')
 	#plt.scatter(snr_sps_both[0:-2], snr_npy_both[1:-1], s=5)
 	snr_both = plt.scatter(snr_sps_both, snr_npy_both, s=5, c='black')
-	snr_sps = plt.scatter(snr_sps_only, [0]*len(snr_sps_only), s=8, c='blue')
-	snr_npy = plt.scatter([0]*len(snr_npy_only), snr_npy_only, s=8, c='green')
+	snr_sps = plt.scatter(snr_sps_only, [0]*len(snr_sps_only), s=120, c='blue', marker='|')
+	snr_npy = plt.scatter([0]*len(snr_npy_only), snr_npy_only, s=120, c='green', marker='_')
 	#plt.scatter(snr_npy_only)
 	#plt.scatter(time_sps_only, snr_sps_only, marker='x', c='red', linestyle='None', s=10, label='Only detected by SPS')
 	#plt.scatter(time_npy_both[low_num:high_num], [x / 50 for x in snr_npy_both[low_num:high_num]], marker='x', c='red', linestyle='None', s=10, label='L1 detection SNR')
@@ -275,8 +275,8 @@ def plot_snr_compare(npy_fullresult, sps_fullresult):
 	plt.xlabel('Single Pulse Search Detection SNR')
 	plt.ylabel('L1 Detection SNR')
 	#print(np.corrcoef(snr_sps_both, snr_npy_both))[0, 1]
-	plt.axvline(x=5, color='k', linestyle='--', lw=0.5)
-	plt.axhline(y=7, color='k', linestyle='--', lw=0.5)
+	plt.axvline(x=4, color='k', linestyle='--', lw=0.5)
+	plt.axhline(y=8, color='k', linestyle='--', lw=0.5)
 	ax.set_ylim([0,50])
 	ax.set_xlim([0,50])
 	print(time_sps_only)
@@ -309,26 +309,42 @@ def plot_snr_compare(npy_fullresult, sps_fullresult):
 
 	time_diff_sum = 0
 	for i in range(len(time_sps_both)):
-		time_diff_sum += time_sps_both[i]-time_npy_both[i]
+		time_diff_sum += (time_sps_both[i]-time_npy_both[i])**2
 
 	return time_diff_sum
+
+def remove_npy_otherdm(npy_result, lodm, hidm):
+	#print(npy_result)
+	ind = []
+	for ele in npy_result:
+		if ele['dm_best_min']>hidm or ele['dm_best_min']<lodm-2:
+			for i in range(len(np.where(npy_result['time']==ele['time'])[0])):
+				ind.append(np.where(npy_result['time']==ele['time'])[0][i])
+	#print(ind)
+	npy_result = np.delete(npy_result, ind)
+	return npy_result
+
 
 def main():
 	time_diff_sum_array = []
 	off = 0.475
-	#for off in np.arange(0.47, 0.5, 0.001):
+	#for off in np.arange(0.45, 0.49, 0.005):
 
 	sps_result = readsps(sys.argv[1], off)
+	print('!!!!%f'%len(sps_result))
 	npy_result = readnpy(sys.argv[2])
 	#npy2_result = readnpy(sys.argv[3])
+
+	#time_histo(sps_result['time'])
+	npy_result = remove_npy_otherdm(npy_result, 26, 27)
+
+	time_histo(npy_result['time'])
+	time_histo(sps_result['time'])
 
 	offset = 0
 
 	npy_result = remove_npy_dup(npy_result, 0.714)
 	sps_result = remove_npy_dup(sps_result, 0.714)
-
-	#time_histo(sps_result['time'])
-	time_histo(npy_result['time'])
 
 	series_filled_sps, count_sps = fill_t_series_sps(0.71446, sps_result['time'], offset)
 	series_filled_full_sps = fill_full_series_sps(series_filled_sps, sps_result, offset)
@@ -365,9 +381,9 @@ def main():
 	time_diff_sum = plot_snr_compare(series_filled_full_npy,series_filled_full_sps)
 
 		
-	# 	time_diff_sum_array.append('time offset %.3f diff sum %.3f'%(off, time_diff_sum))
+	#time_diff_sum_array.append('time offset %.3f diff sum %.3f'%(off, time_diff_sum))
 	# 	#print(series_filled_full_npy['snr'])
-	# print(time_diff_sum_array)
+	#print(time_diff_sum_array)
 
 if __name__=='__main__':
 	main()
