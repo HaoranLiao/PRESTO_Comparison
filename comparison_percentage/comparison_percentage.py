@@ -276,7 +276,8 @@ def plot_snr_compare(npy_fullresult, sps_fullresult):
 	plt.ylabel('L1 Detection SNR')
 	#print(np.corrcoef(snr_sps_both, snr_npy_both))[0, 1]
 	plt.axvline(x=4, color='k', linestyle='--', lw=0.5)
-	plt.axhline(y=8, color='k', linestyle='--', lw=0.5)
+	plt.axhline(y=8
+		, color='k', linestyle='--', lw=0.5)
 	ax.set_ylim([0,50])
 	ax.set_xlim([0,50])
 	print(time_sps_only)
@@ -364,7 +365,7 @@ def main():
 	count_sps_only = 0
 	for i in range(len(series_filled_sps)):
 		#print('%.1f    %.1f'%(series_filled_sps[i], series_filled_npy[i]))
-		#print('%.1f    %.1f'%(series_filled_sps[i], series_filled_npy[i]))
+		print('%.1f    %.1f'%(series_filled_sps[i], series_filled_npy[i]))
 		if series_filled_npy[i]!=0 and series_filled_sps[i]!=0:
 			count_both += 1
 		elif series_filled_npy[i]!=0 and series_filled_sps[i]==0:
