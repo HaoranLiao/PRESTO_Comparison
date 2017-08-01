@@ -48,21 +48,21 @@ def run_rfifind(filename, rfifind_time_interval, *options):
 
     #Find RFI based on the rfifind_time_interval, and return the name of the mask file generated
 
-	rfifind_output_name = filename.split('.')[0]
-	option = ''
-	for op in options:
-		if is_number(op):
-			option += str(op)+' '
-		else:
-			option += op+' '        
-	cmd = 'rfifind -time %.1f -o %s %s%s'\
+    rfifind_output_name = filename.split('.')[0]
+    option = ''
+    for op in options:
+    	if is_number(op):
+                option += str(op)+' '
+    	else:
+    	    option += op+' '        
+    cmd = 'rfifind -time %.1f -o %s %s%s'\
             %(rfifind_time_interval, rfifind_output_name, option, filename)
-	dbgmsg(cmd)
-	subprocess.call(cmd, shell=True)
-	maskname = filename.split(".")[0]+"_rfifind.mask"
-	dbgmsg(maskname)
+    dbgmsg(cmd)
+    subprocess.call(cmd, shell=True)
+    maskname = filename.split(".")[0]+"_rfifind.mask"
+    dbgmsg(maskname)
     
-	return maskname
+    return maskname
 
 def run_DDplan(header, hidm, nsub, timeres):
 
@@ -97,7 +97,7 @@ def run_DDplan(header, hidm, nsub, timeres):
     return plan_header
    
 def make_plan_header(plan): 
-	plan_header = {'Low DM': [],\
+    plan_header = {'Low DM': [],\
                    'High DM': [],\
                    'dDM': [],\
                    'DownSamp': [],\
@@ -107,43 +107,43 @@ def make_plan_header(plan):
                    'calls': [],\
                    'WorkFrac': []}
 
-	#There may be multiple plans for corresponding DM intervals, read all of them separately
-	#and store the ith plan in the ith entry of the header key's list
-	for line in plan.split('\n'):
-		if 'Low DM' in line:
-			firstline = plan.split('\n').index(line)+1
-	plan_lines = plan.split('\n')[firstline:]
-	plan_lines = filter(None, plan_lines)
-	dbgmsg('plan_line: %s'%plan_lines)
-	plan_value = []
-	for line in plan_lines:
-		plan_value.append(line.split())
-	temp = []        
-	for ele in plan_value:
-		temp = temp+ele
-	plan_value = temp
-	dbgmsg('plan_value: %s'%plan_value)
-	for i in range(len(plan_value)):
-		if i%9==0:
-			plan_header['Low DM'].append(plan_value[i])
-		elif i%9==1:
-			plan_header['High DM'].append(plan_value[i])
-		elif i%9==2:
-			plan_header['dDM'].append(plan_value[i])
-		elif i%9==3:
-			plan_header['DownSamp'].append(plan_value[i])
-		elif i%9==4:
-			plan_header['dSubDM'].append(plan_value[i])
-		elif i%9==5:
-			plan_header['#DMs'].append(plan_value[i])
-		elif i%9==6:
-			plan_header['DMs/call'].append(plan_value[i])
-		elif i%9==7:
-			plan_header['calls'].append(plan_value[i])
-		else:
-			plan_header['WorkFrac'].append(plan_value[i])
+    #There may be multiple plans for corresponding DM intervals, read all of them separately
+    #and store the ith plan in the ith entry of the header key's list
+    for line in plan.split('\n'):
+        if 'Low DM' in line:
+            firstline = plan.split('\n').index(line)+1
+    plan_lines = plan.split('\n')[firstline:]
+    plan_lines = filter(None, plan_lines)
+    dbgmsg('plan_line: %s'%plan_lines)
+    plan_value = []
+    for line in plan_lines:
+        plan_value.append(line.split())
+    temp = []        
+    for ele in plan_value:
+        temp = temp+ele
+    plan_value = temp
+    dbgmsg('plan_value: %s'%plan_value)
+    for i in range(len(plan_value)):
+        if i%9==0:
+            plan_header['Low DM'].append(plan_value[i])
+        elif i%9==1:
+            plan_header['High DM'].append(plan_value[i])
+        elif i%9==2:
+            plan_header['dDM'].append(plan_value[i])
+        elif i%9==3:
+            plan_header['DownSamp'].append(plan_value[i])
+        elif i%9==4:
+            plan_header['dSubDM'].append(plan_value[i])
+        elif i%9==5:
+            plan_header['#DMs'].append(plan_value[i])
+        elif i%9==6:
+            plan_header['DMs/call'].append(plan_value[i])
+        elif i%9==7:
+            plan_header['calls'].append(plan_value[i])
+        else:
+            plan_header['WorkFrac'].append(plan_value[i])
 
-	return plan_header
+    return plan_header
 
 def run_prepsubband(input_filename, plan_header, maskname, nsub):
     
@@ -166,7 +166,7 @@ def run_prepsubband(input_filename, plan_header, maskname, nsub):
                'numdms=%s'%numdms, 'downsamp=%s'%downsamp, 'nsub=%s'%nsub)
 
             #Prepare subbands in chunks of 1000 for this sub-plan
-    	    if float(numdms)>1000:
+            if float(numdms)>1000:
                 integer = int(numdms)//1000
                 remainder = int(numdms)%1000
                 for j in range(integer+1):
@@ -198,17 +198,17 @@ def run_prepsubband(input_filename, plan_header, maskname, nsub):
                         	 '-o', output_fileroot, input_filename],\
                         	 #'-mask', maskname],\
                         	 shell=False)
-		dir = move_subbands(output_fileroot)	    	
+                dir = move_subbands(output_fileroot)	    	
 		
     except Exception:
         dir = move_subbands(output_fileroot)
-	traceback.print_exc(file=sys.stdout)
-	print('Subbands moved\nSearch interupted\nExit')
+        traceback.print_exc(file=sys.stdout)
+        print('Subbands moved\nSearch interupted\nExit')
         sys.exit()
     except (KeyboardInterrupt, SystemExit):
         dir = move_subbands(output_fileroot)
         print('\nSubbands moved\nSearch inerupted\nExit')
-	sys.exit()
+        sys.exit()
     finally:
         return dir
 
@@ -223,35 +223,35 @@ def group_single_pulse_search_plot(input_filename, plan_header, dir, group):
     try:
         if group is None:
             run_single_pulse_search(dir)
-	else:
-	    os.chdir(dir)
+        else:
+            os.chdir(dir)
             group =  round(float(group), 2)
-	    output_fileroot = input_filename.split('.')[0]
-	    num_dDM = len(plan_header['dDM'])
-	    dm_range = round(float(plan_header['High DM'][-1]), 2)
+            output_fileroot = input_filename.split('.')[0]
+            num_dDM = len(plan_header['dDM'])
+            dm_range = round(float(plan_header['High DM'][-1]), 2)
             num_group = int(float(dm_range)//group)+1 
-	    dDM = float(plan_header['dDM'][0])
-	    dbgmsg('Number of subgroup: %s'%num_group, 'DM range: %s'%dm_range,\
-               	   'Number of DM step: %s'%num_dDM)
-	    temp = 0.00
-	    for i in range(num_group):
-		filenames = ''
-		current_dm = temp
-		current_lodm = current_dm
-	        while (round(current_dm, 2)<=(i+1)*group and round(current_dm, 2)<=dm_range):
-		    filenames = filenames+'*DM%.2f*.dat '%(current_dm)
-		    for j in range(num_dDM-1):
-			if round(current_dm, 2)==float(plan_header['High DM'][j]):
-			    dDM = float(plan_header['dDM'][j+1])
-			    print(round(current_dm, 2), dDM)
-			    dbgmsg('DM step has changed')
-		    dbgmsg(current_dm, dDM)
-		    current_dm += dDM
-	        temp = round(current_dm-dDM, 2)
-		current_hidm = temp
-	        run_single_pulse_search(dir, filenames)
-	        os.rename(output_fileroot+'_singlepulse.ps',\
-			  '%s_%.1f_%.1f_singlepulse.ps'%(output_fileroot, current_lodm, current_hidm))
+            dDM = float(plan_header['dDM'][0])
+            dbgmsg('Number of subgroup: %s'%num_group, 'DM range: %s'%dm_range,\
+                   	   'Number of DM step: %s'%num_dDM)
+            temp = 0.00
+            for i in range(num_group):
+                filenames = ''
+                current_dm = temp
+                current_lodm = current_dm
+                while (round(current_dm, 2)<=(i+1)*group and round(current_dm, 2)<=dm_range):
+                    filenames = filenames+'*DM%.2f*.dat '%(current_dm)
+                    for j in range(num_dDM-1):
+                        if round(current_dm, 2)==float(plan_header['High DM'][j]):
+                            dDM = float(plan_header['dDM'][j+1])
+                            print(round(current_dm, 2), dDM)
+                            dbgmsg('DM step has changed')
+                    dbgmsg(current_dm, dDM)
+                    current_dm += dDM
+                    temp = round(current_dm-dDM, 2)
+                current_hidm = temp
+                run_single_pulse_search(dir, filenames)
+                os.rename(output_fileroot+'_singlepulse.ps',\
+    			  '%s_%.1f_%.1f_singlepulse.ps'%(output_fileroot, current_lodm, current_hidm))
 
     except ValueError:
         traceback.print_exc(file=sys.stdout)
@@ -265,10 +265,10 @@ def run_single_pulse_search(dir, *args):
     #each single pulse seaching will generate a plot which groups all the input DM
 
     if len(args)==0:
-        subprocess.call('single_pulse_search.py -f -t 4 *.dat', cwd=dir+'/', shell=True)
+        subprocess.call('single_pulse_search.py -f *.dat', cwd=dir+'/', shell=True)
     else:
         for arg in args:
-            subprocess.call('single_pulse_search.py -f -t 4 %s'%arg, cwd=dir+'/', shell=True)   
+            subprocess.call('single_pulse_search.py -f %s'%arg, cwd=dir+'/', shell=True)   
 
 def move_subbands(fileroot):
 
@@ -326,18 +326,18 @@ def read_pulses(dir):
     pulse = []
     count = 0
     for i in range(len(content)):
-		info = {}
-		if content[i].startswith('Group'):
-			rank = float(content[i+6].split()[1].strip())
-			if rank==7.0 or rank==6.0 or rank==5.0 or rank==4.0:
-				info['Min DM'] = float(content[i+1].split(':')[1].strip())
-				info['Max DM'] = float(content[i+2].split(':')[1].strip())
-				info['Center time'] =  float(content[i+3].split(':')[1].strip())
-				info['Duration'] = float(content[i+4].split(':')[1].strip())
-				info['Max Sigma'] = float(content[i+5].split(':')[1].strip())
-				info['Rank'] = rank
-				pulse.append(info)
-				count += 1
+        info = {}
+        if content[i].startswith('Group'):
+            rank = float(content[i+6].split()[1].strip())
+            if rank==7.0 or rank==6.0 or rank==5.0 or rank==4.0:
+                info['Min DM'] = float(content[i+1].split(':')[1].strip())
+                info['Max DM'] = float(content[i+2].split(':')[1].strip())
+                info['Center time'] =  float(content[i+3].split(':')[1].strip())
+                info['Duration'] = float(content[i+4].split(':')[1].strip())
+                info['Max Sigma'] = float(content[i+5].split(':')[1].strip())
+                info['Rank'] = rank
+                pulse.append(info)
+                count += 1
     dbgmsg(pulse, count)
    
     return pulse
@@ -496,7 +496,7 @@ def main():
 	#output_dir = run_prepsubband(input_filename, plan_header, maskname, nsub)
 	#output_dir = '/home/presto/workspace/17-02-08-incoherent/frb_search_1/composition_p1_subbands'
 	#output_dir = '/home/presto/workspace/17-02-08-incoherent/frb_search_1/example2_raw_subbands'
-	output_dir = '/home/presto/workspace/17-02-08-incoherent/L1_sample/example2_2_subbands_threshold4'
+	#output_dir = '/home/presto/workspace/17-02-08-incoherent/L1_sample/example2_2_subbands_nomask_threshold4'
 	#output_dir = '/home/presto/workspace/17-02-08-incoherent/L1_sample/example2_2_subbands_nomask_threshold5_b_m'
 	output_dir = '/home/presto/workspace/17-02-08-incoherent/L1_sample/example2_2_subbands_threshold5'
 	print("%sDONE SINGLE PULSE SEARCH & FILES MOVED%s\n"%(dash, dash))
@@ -516,11 +516,11 @@ def main():
 	#pulses = read_pulses_specific(output_dir, 10, 40, 0, 410)
 	print("%sDONE GROUPING PULSES%s\n"%(dash, dash))
 
-	font = {'family' : 'normal',\
-			#'weight' : 'bold',\
-			'size'   : 15}
+	#font = {'family' : 'normal',\
+	#		#'weight' : 'bold',\
+	#		'size'   : 15}
 
-	matplotlib.rc('font', **font)
+	#matplotlib.rc('font', **font)
 
 	print("%sSTART %s"%(dash, dash))
 	#plot_pulses(output_dir, pulses, fileroot, 0, 410)
