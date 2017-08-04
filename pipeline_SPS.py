@@ -50,12 +50,12 @@ def run_rfifind(filename, rfifind_time_interval, *options):
     rfifind_output_name = filename.split('.')[0]
     option = ''
     for op in options:
-	if is_number(op):
+        if is_number(op):
             option += str(op)+' '
-	else:
-	    option += op+' '        
-    cmd = 'rfifind -time %.1f -o %s %s%s'\
-            %(rfifind_time_interval, rfifind_output_name, option, filename)
+        else:
+            option += op+' '        
+            cmd = 'rfifind -time %.1f -o %s %s%s'\
+                  %(rfifind_time_interval, rfifind_output_name, option, filename)
     dbgmsg(cmd)
     subprocess.call(cmd, shell=True)
     maskname = filename.split(".")[0]+"_rfifind.mask"
@@ -110,7 +110,7 @@ def make_plan_header(plan):
     #and store the ith plan in the ith entry of the header key's list
     for line in plan.split('\n'):
         if 'Low DM' in line:
-	    firstline = plan.split('\n').index(line)+1
+            firstline = plan.split('\n').index(line)+1
     plan_lines = plan.split('\n')[firstline:]
     plan_lines = filter(None, plan_lines)
     dbgmsg('plan_line: %s'%plan_lines)
@@ -165,7 +165,7 @@ def run_prepsubband(input_filename, plan_header, maskname, nsub):
                'numdms=%s'%numdms, 'downsamp=%s'%downsamp, 'nsub=%s'%nsub)
 
             #Prepare subbands in chunks of 1000 for this sub-plan
-    	    if float(numdms)>1000:
+            if float(numdms)>1000:
                 integer = int(numdms)//1000
                 remainder = int(numdms)%1000
                 for j in range(integer+1):
@@ -197,17 +197,17 @@ def run_prepsubband(input_filename, plan_header, maskname, nsub):
                         	 '-o', output_fileroot, input_filename,\
                         	 '-mask', maskname],\
                         	 shell=False)
-		dir = move_subbands(output_fileroot)	    	
+                dir = move_subbands(output_fileroot)	    	
 		
     except Exception:
         dir = move_subbands(output_fileroot)
-	traceback.print_exc(file=sys.stdout)
-	print('Subbands moved\nSearch interupted\nExit')
+        traceback.print_exc(file=sys.stdout)
+        print('Subbands moved\nSearch interupted\nExit')
         sys.exit()
     except (KeyboardInterrupt, SystemExit):
         dir = move_subbands(output_fileroot)
         print('\nSubbands moved\nSearch inerupted\nExit')
-	sys.exit()
+        sys.exit()
     finally:
         return dir
 
@@ -222,8 +222,8 @@ def group_single_pulse_search_plot(input_filename, plan_header, dir, group):
     try:
         if group is None:
             run_single_pulse_search(dir)
-	else:
-	    os.chdir(dir)
+        else:
+            os.chdir(dir)
             group =  round(float(group), 2)
 	    output_fileroot = input_filename.split('.')[0]
 	    num_dDM = len(plan_header['dDM'])
