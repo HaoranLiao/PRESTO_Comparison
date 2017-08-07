@@ -480,17 +480,17 @@ def main():
 	#group_single_pulse_search_plot(input_filename, plan_header, output_dir, group)
 	print("%sDONE SINGLE PULSE SEARCH & FILES MOVED%s\n"%(dash, dash))
 
-	print("%sSTART RRATTRAPS%s"%(dash, dash))
-	run_rrattrap(output_dir)
-	print("%sDONE RRATTRAPS%s\n"%(dash, dash))
+	# print("%sSTART RRATTRAPS%s"%(dash, dash))
+	# run_rrattrap(output_dir)
+	# print("%sDONE RRATTRAPS%s\n"%(dash, dash))
 	
-	print("%sSTART GROUPING PULSES%s"%(dash, dash))
-	pulses = read_pulses_specific(output_dir, 0.0, 50.0, 0.0, 500.0)
-	print("%sDONE GROUPING PULSES%s\n"%(dash, dash))
+	# print("%sSTART GROUPING PULSES%s"%(dash, dash))
+	# pulses = read_pulses_specific(output_dir, 0.0, 50.0, 0.0, 500.0)
+	# print("%sDONE GROUPING PULSES%s\n"%(dash, dash))
 	
-	print("%sSTART %s"%(dash, dash))
-	plot_pulses(output_dir, pulses, fileroot)
-	print("%sDONE GROUPING PULSES%s\n"%(dash, dash))
+	# print("%sSTART %s"%(dash, dash))
+	# plot_pulses(output_dir, pulses, fileroot)
+	# print("%sDONE GROUPING PULSES%s\n"%(dash, dash))
 
 
     
