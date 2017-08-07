@@ -19,7 +19,7 @@ def plot(data, basenm, timelim_low, timelim_high):
 			asym_err = [data['dm_best'][i]-data['dm_min'][i],data['dm_max'][i]-data['dm_best'][i]]
 			asym_err_2 = [data['dm_best'][i]-data['dm_best_min'][i],data['dm_best_max'][i]-data['dm_best'][i]]
 			#print(asym_err)
-			plt.errorbar(data['time'][i], data['dm_best'][i], yerr=[asym_err], marker='o', markersize=2, color='black', lw=0.5, capsize=0, capthick=0)
+			#plt.errorbar(data['time'][i], data['dm_best'][i], yerr=[asym_err], marker='o', markersize=2, color='black', lw=0.5, capsize=0, capthick=0)
 			plt.errorbar(data['time'][i], data['dm_best'][i], yerr=[asym_err_2], marker='o', markersize=2, color='black', lw=0.5, capsize=1.5, capthick=0.5)
 			#plt.errorbar(data['time'][i], data['dm_best'][i], marker='o', markersize=data['snr'][i]/5, yerr=[data['dm_min'][i],data['dm_max'][i]])
 	axes = plt.gca()
