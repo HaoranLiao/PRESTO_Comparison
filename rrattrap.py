@@ -43,7 +43,7 @@ def dmt_threshold(dm, use_dmplan):
     if use_dmplan:
         dm_fac, t_fac = rrattrap_config.use_dmplan(dm)
     else:
-	dm_fac = 1
+        dm_fac = 1
         t_fac = 1
     return dm_fac, t_fac
 
