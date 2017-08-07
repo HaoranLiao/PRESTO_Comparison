@@ -7,6 +7,7 @@ import pickle
 import traceback
 import warnings
 import glob
+import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 
@@ -47,6 +48,7 @@ def run_rfifind(filename, rfifind_time_interval, *options):
 
     #Find RFI based on the rfifind_time_interval, and return the name of the mask file generated
 
+<<<<<<< HEAD
     rfifind_output_name = filename.split('.')[0]
     option = ''
     for op in options:
@@ -60,8 +62,23 @@ def run_rfifind(filename, rfifind_time_interval, *options):
     subprocess.call(cmd, shell=True)
     maskname = filename.split(".")[0]+"_rfifind.mask"
     dbgmsg(maskname)
+=======
+	rfifind_output_name = filename.split('.')[0]
+	option = ''
+	for op in options:
+		if is_number(op):
+			option += str(op)+' '
+		else:
+			option += op+' '        
+	cmd = 'rfifind -time %.1f -o %s %s%s'\
+            %(rfifind_time_interval, rfifind_output_name, option, filename)
+	dbgmsg(cmd)
+	subprocess.call(cmd, shell=True)
+	maskname = filename.split(".")[0]+"_rfifind.mask"
+	dbgmsg(maskname)
+>>>>>>> f528f0413c5794796ab316260d45c66b29ae8296
     
-    return maskname
+	return maskname
 
 def run_DDplan(header, hidm, nsub, timeres):
 
@@ -96,7 +113,7 @@ def run_DDplan(header, hidm, nsub, timeres):
     return plan_header
    
 def make_plan_header(plan): 
-    plan_header = {'Low DM': [],\
+	plan_header = {'Low DM': [],\
                    'High DM': [],\
                    'dDM': [],\
                    'DownSamp': [],\
@@ -106,6 +123,7 @@ def make_plan_header(plan):
                    'calls': [],\
                    'WorkFrac': []}
 
+<<<<<<< HEAD
     #There may be multiple plans for corresponding DM intervals, read all of them separately
     #and store the ith plan in the ith entry of the header key's list
     for line in plan.split('\n'):
@@ -141,8 +159,45 @@ def make_plan_header(plan):
             plan_header['calls'].append(plan_value[i])
         else:
             plan_header['WorkFrac'].append(plan_value[i])
+=======
+	#There may be multiple plans for corresponding DM intervals, read all of them separately
+	#and store the ith plan in the ith entry of the header key's list
+	for line in plan.split('\n'):
+		if 'Low DM' in line:
+			firstline = plan.split('\n').index(line)+1
+	plan_lines = plan.split('\n')[firstline:]
+	plan_lines = filter(None, plan_lines)
+	dbgmsg('plan_line: %s'%plan_lines)
+	plan_value = []
+	for line in plan_lines:
+		plan_value.append(line.split())
+	temp = []        
+	for ele in plan_value:
+		temp = temp+ele
+	plan_value = temp
+	dbgmsg('plan_value: %s'%plan_value)
+	for i in range(len(plan_value)):
+		if i%9==0:
+			plan_header['Low DM'].append(plan_value[i])
+		elif i%9==1:
+			plan_header['High DM'].append(plan_value[i])
+		elif i%9==2:
+			plan_header['dDM'].append(plan_value[i])
+		elif i%9==3:
+			plan_header['DownSamp'].append(plan_value[i])
+		elif i%9==4:
+			plan_header['dSubDM'].append(plan_value[i])
+		elif i%9==5:
+			plan_header['#DMs'].append(plan_value[i])
+		elif i%9==6:
+			plan_header['DMs/call'].append(plan_value[i])
+		elif i%9==7:
+			plan_header['calls'].append(plan_value[i])
+		else:
+			plan_header['WorkFrac'].append(plan_value[i])
+>>>>>>> f528f0413c5794796ab316260d45c66b29ae8296
 
-    return plan_header
+	return plan_header
 
 def run_prepsubband(input_filename, plan_header, maskname, nsub):
     
@@ -180,8 +235,8 @@ def run_prepsubband(input_filename, plan_header, maskname, nsub):
                              	     '-downsamp', downsamp,\
                              	     '-nobary',\
                              	     '-nsub', nsub,\
-                             	     '-o', output_fileroot, input_filename,\
-                             	     '-mask', maskname],\
+                             	     '-o', output_fileroot, input_filename],\
+                             	     #'-mask', maskname],\
                              	     shell=False)
                     dir = move_subbands(output_fileroot)
                  
@@ -194,8 +249,8 @@ def run_prepsubband(input_filename, plan_header, maskname, nsub):
                                  '-downsamp', downsamp,\
                                  '-nobary',\
                         	 '-nsub', nsub,\
-                        	 '-o', output_fileroot, input_filename,\
-                        	 '-mask', maskname],\
+                        	 '-o', output_fileroot, input_filename],\
+                        	 #'-mask', maskname],\
                         	 shell=False)
                 dir = move_subbands(output_fileroot)	    	
 		
@@ -264,18 +319,18 @@ def run_single_pulse_search(dir, *args):
     #each single pulse seaching will generate a plot which groups all the input DM
 
     if len(args)==0:
-        subprocess.call('single_pulse_search.py --fast *.dat', cwd=dir+'/', shell=True)
+        subprocess.call('single_pulse_search.py -f -t 4 *.dat', cwd=dir+'/', shell=True)
     else:
         for arg in args:
-            subprocess.call('single_pulse_search.py --fast %s'%arg, cwd=dir+'/', shell=True)   
+            subprocess.call('single_pulse_search.py -f -t 4 %s'%arg, cwd=dir+'/', shell=True)   
 
 def move_subbands(fileroot):
 
     #Move all subbands to the subfloder with the same data name
 
     current_path = os.getcwd()
-    dir = current_path+"/"+fileroot+"_subbands"
-    #dir = current_path+"/"+fileroot+"_subbands_nomask"
+    #dir = current_path+"/"+fileroot+"_subbands"
+    dir = current_path+"/"+fileroot+"_subbands_nomask_threshold4"
     if not os.path.exists(dir):
         os.makedirs(dir)
     files = os.listdir(current_path)
@@ -348,6 +403,7 @@ def read_pulses_specific(dir, lodm, hidm, lotime, hitime):
 	content = [x.strip() for x in content]
 	pulse = []
 	count = 0
+	#for i in range(20):
 	for i in range(len(content)):
 		info = {}
 		if content[i].startswith('Group'):
@@ -357,28 +413,43 @@ def read_pulses_specific(dir, lodm, hidm, lotime, hitime):
 				info['Max DM'] = float(content[i+2].split(':')[1].strip())
 				info['Center time'] =  float(content[i+3].split(':')[1].strip())
 				info['Duration'] = float(content[i+4].split(':')[1].strip())
-				info['Max Sigma'] = round(float(content[i+5].split(':')[1].strip()),2)
+				info['Max Sigma'] = float(content[i+5].split(':')[1].strip())
 				info['Rank'] = rank
-			j = 7
-			while content[i+j].split()[1].strip() != info['Max Sigma']:
-				j += 1
-			print(j)
-			if info['Center time']>=lotime and info['Center time']<=hitime\
-				  and info['Min DM']>=lodm and info['Max DM']<=hidm:
+				j = 8
+				dbgmsg(info['Max Sigma'])
+				dbgmsg(i)
+				while content[i+j].split()[1].strip()!=format(info['Max Sigma'], '.2f'):
+					#dbgmsg(content[i+j])
+					dbgmsg(content[i+j].split()[1].strip())
+					j += 1
+				print(j)
+				info['Best DM'] = round(float(content[i+j].split()[0].strip()),2)
+				if info['Center time']>=lotime and info['Center time']<=hitime and info['Min DM']>=lodm and info['Max DM']<=hidm:
 					pulse.append(info)
 					count +=1
 	dbgmsg(pulse, count)
 
 	return pulse
 
-def plot_pulses(dir, pulses, fileroot):
+def plot_pulses(dir, pulses, fileroot, time_low, time_high):
+	dm_sum = 0
+	dm_variance = 0
+	for pul in pulses:
+		dm_sum += pul['Best DM']
+	dm_mean = dm_sum/len(pulses)
+	for pul in pulses:
+		dm_variance += (pul['Best DM']-dm_mean)**2
+	dm_std = np.sqrt(dm_variance/len(pulses))
+	dm_stderr = dm_std/np.sqrt(len(pulses))
+	print('Mean DM: %.5f'%dm_mean)
+	print('Std Error: %.5f'%dm_stderr)
 	os.chdir(dir)
-	fig = plt.figure()
+	fig = plt.figure(figsize=(13,5))
 	for pul in pulses:
 		c = pul['Rank']
 		#c = []
 		#c.append(pul['Rank'])
-		cen_dm = pul['Min DM']+(pul['Max DM']-pul['Min DM'])/2
+		#cen_dm = pul['Min DM']+(pul['Max DM']-pul['Min DM'])/2
 		#c = ['red' if x==7.0 else 'blue' if x==4.0 else 'green' if x==5.0 else x for x in c]
 		#c = ['yellow' if x==4.0 else x for x in c]
 		if c==7.0:
@@ -391,17 +462,26 @@ def plot_pulses(dir, pulses, fileroot):
 			c = 'yellow'
 		else:
 			c = 'white'
-		plt.errorbar(pul['Center time'], cen_dm,\
-					 xerr=pul['Duration']/2, yerr=(pul['Max DM']-pul['Min DM'])/2,\
-					 marker='.', c=c, linestyle='None', markersize='3', elinewidth=1, capsize=0)
-	plt.title('Single Pulses')
-	plt.xlabel('Time (s)')
-	plt.ylabel('DM Range')
+		#asym_err = [pul['Best DM']-pul['Min DM'],pul['Max DM']-pul['Best DM']]
+		#print(asym_err)
+		plt.errorbar(pul['Center time'], pul['Best DM'],\
+					 xerr=pul['Duration']/2, yerr=pul['Max DM']-pul['Best DM'],\
+					 marker='o', c='black', linestyle='None', markersize=2, elinewidth=0.5, capsize=0)
+	plt.title('Rrattrap Grouped Pulses')
+	plt.xlabel('Arrival Time (s)')
+	plt.ylabel('DM ($pc$ $cm^{-3}$)')
 	red_patch = mpatches.Patch(color='red', label='Rank 7')
 	blue_patch = mpatches.Patch(color='blue', label='Rank 6')
 	green_patch = mpatches.Patch(color='green', label='Rank 5')
 	yellow_patch = mpatches.Patch(color='yellow', label='Rank 4')
-	plt.legend(handles=[red_patch, blue_patch, green_patch, yellow_patch])
+	x = np.linspace(time_low, time_high)
+	plt.plot(x, [dm_mean]*len(x), linestyle='--', lw=0.5, color='black')
+	plt.plot(x, [26.76]*len(x), linestyle='-', lw=0.5, color='red')
+	#plt.legend(handles=[red_patch, blue_patch, green_patch, yellow_patch])
+	axes = plt.gca()
+	axes.set_xlim([time_low,time_high])
+	axes.set_ylim([10,40])
+	plt.yticks(range(10, 50, 10))
 	#fig.savefig('%s_single_pulses.png'%fileroot)
 	plt.show()
 
@@ -440,7 +520,7 @@ def main():
     #If there exists a DDplan file associated, read it; otherwise, generate DDplan header file
     #hidm: DM upper limit(lower limit 0.00), nsub: number of subbands, timeres: acceptable time resolution in ms
 	print("%sSTART DDPLAN%s"%(dash, dash))
-	hidm = '50'
+	hidm = '550'
 	nsub = '128'
 	timeres = '1'               
     #if not os.path.isfile(source_name+'_DDplanHeader.pkl'):
@@ -456,12 +536,12 @@ def main():
 	#clip: remove the time interval where the SNR is above clip at zero DM; that signal is considered RFI (default 6.0)
 	#specify other options to run rfifind in the last input argument
 	print("%sSTART FINDING RFI%s"%(dash, dash))
-	rfifind_time_interval = 0.5
+	rfifind_time_interval = 1
 	clip = 6.0						
 	#if not os.path.isfile(fileroot+'_rfifind.mask'):
 	#maskname = run_rfifind(input_filename, rfifind_time_interval, '-clip %.1f'%clip)
 	#else:
-	#maskname = fileroot+'_rfifind.mask'
+	maskname = fileroot+'_rfifind.mask'
 	#dbgmsg('Mask Name: %s'%maskname)
 	print("%sDONE FINDING RFI%s\n"%(dash, dash))
 	
@@ -469,17 +549,20 @@ def main():
 	print("%sSTART PREPARING SUBBANDS & SINGLE PULSE SEARCH%s"%(dash, dash))
 	#output_dir = run_prepsubband(input_filename, plan_header, maskname, nsub)
 	#output_dir = '/home/presto/workspace/17-02-08-incoherent/frb_search_1/composition_p1_subbands'
-	output_dir = '/home/presto/workspace/17-02-08-incoherent/frb_search_1/example2_raw_subbands'
-	#output_dir = '/home/presto/workspace/17-02-08-incoherent/frb_search_1/example2_badchanmask_subbands'
+	#output_dir = '/home/presto/workspace/17-02-08-incoherent/frb_search_1/example2_raw_subbands'
+	output_dir = '/home/presto/workspace/17-02-08-incoherent/L1_sample/example2_2_subbands_threshold4'
+	#output_dir = '/home/presto/workspace/17-02-08-incoherent/L1_sample/example2_2_subbands_nomask_threshold5_b_m'
+	output_dir = '/home/presto/workspace/17-02-08-incoherent/L1_sample/example2_2_subbands_threshold5'
 	print("%sDONE SINGLE PULSE SEARCH & FILES MOVED%s\n"%(dash, dash))
 
 	#Do single pulse search based on the gourp specified
 	#group: the number fo DMs grouped together to generate the folded plot
 	print("%sSTART PREPARING SUBBANDS & SINGLE PULSE SEARCH%s"%(dash, dash))
 	group = 50
-	#group_single_pulse_search_plot(input_filename, plan_header, output_dir, group)
+	group_single_pulse_search_plot(input_filename, plan_header, output_dir, group)
 	print("%sDONE SINGLE PULSE SEARCH & FILES MOVED%s\n"%(dash, dash))
 
+<<<<<<< HEAD
 	# print("%sSTART RRATTRAPS%s"%(dash, dash))
 	# run_rrattrap(output_dir)
 	# print("%sDONE RRATTRAPS%s\n"%(dash, dash))
@@ -491,6 +574,25 @@ def main():
 	# print("%sSTART %s"%(dash, dash))
 	# plot_pulses(output_dir, pulses, fileroot)
 	# print("%sDONE GROUPING PULSES%s\n"%(dash, dash))
+=======
+	print("%sSTART RRATTRAPS%s"%(dash, dash))
+	#run_rrattrap(output_dir)
+	print("%sDONE RRATTRAPS%s\n"%(dash, dash))
+	
+	print("%sSTART GROUPING PULSES%s"%(dash, dash))
+	#pulses = read_pulses_specific(output_dir, 10, 40, 0, 410)
+	print("%sDONE GROUPING PULSES%s\n"%(dash, dash))
+
+	font = {'family' : 'normal',\
+			#'weight' : 'bold',\
+			'size'   : 15}
+
+	matplotlib.rc('font', **font)
+
+	print("%sSTART %s"%(dash, dash))
+	#plot_pulses(output_dir, pulses, fileroot, 0, 410)
+	print("%sDONE GROUPING PULSES%s\n"%(dash, dash))
+>>>>>>> f528f0413c5794796ab316260d45c66b29ae8296
 
 
     
