@@ -56,10 +56,9 @@ def main():
 		x[i] = (dm, sigma, time, sample, downfact)
 	x = x[np.argsort(x['time'])]
 	
-	#print(x)
-	plot(x, basenm, 0, 200)
-	plot(x, basenm, 200, 410)
-	time_histo(x['time'])
+	#plot(x, basenm, 0, 200)
+	plot(x, basenm, 0, 410)
+	#time_histo(x['time'])
 
 if __name__ == "__main__":
     main()
