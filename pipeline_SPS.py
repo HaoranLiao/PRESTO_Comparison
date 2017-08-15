@@ -48,7 +48,6 @@ def run_rfifind(filename, rfifind_time_interval, *options):
 
     #Find RFI based on the rfifind_time_interval, and return the name of the mask file generated
 
-<<<<<<< HEAD
     rfifind_output_name = filename.split('.')[0]
     option = ''
     for op in options:
@@ -58,11 +57,10 @@ def run_rfifind(filename, rfifind_time_interval, *options):
             option += op+' '        
             cmd = 'rfifind -time %.1f -o %s %s%s'\
                   %(rfifind_time_interval, rfifind_output_name, option, filename)
-    dbgmsg(cmd)
-    subprocess.call(cmd, shell=True)
-    maskname = filename.split(".")[0]+"_rfifind.mask"
-    dbgmsg(maskname)
-=======
+	dbgmsg(cmd)
+	subprocess.call(cmd, shell=True)
+	maskname = filename.split(".")[0]+"_rfifind.mask"
+	dbgmsg(maskname)
 	rfifind_output_name = filename.split('.')[0]
 	option = ''
 	for op in options:
@@ -76,7 +74,6 @@ def run_rfifind(filename, rfifind_time_interval, *options):
 	subprocess.call(cmd, shell=True)
 	maskname = filename.split(".")[0]+"_rfifind.mask"
 	dbgmsg(maskname)
->>>>>>> f528f0413c5794796ab316260d45c66b29ae8296
     
 	return maskname
 
@@ -113,7 +110,7 @@ def run_DDplan(header, hidm, nsub, timeres):
     return plan_header
    
 def make_plan_header(plan): 
-	plan_header = {'Low DM': [],\
+    plan_header = {'Low DM': [],\
                    'High DM': [],\
                    'dDM': [],\
                    'DownSamp': [],\
@@ -123,12 +120,11 @@ def make_plan_header(plan):
                    'calls': [],\
                    'WorkFrac': []}
 
-<<<<<<< HEAD
     #There may be multiple plans for corresponding DM intervals, read all of them separately
     #and store the ith plan in the ith entry of the header key's list
     for line in plan.split('\n'):
-        if 'Low DM' in line:
-            firstline = plan.split('\n').index(line)+1
+	    if 'Low DM' in line:
+		    firstline = plan.split('\n').index(line)+1
     plan_lines = plan.split('\n')[firstline:]
     plan_lines = filter(None, plan_lines)
     dbgmsg('plan_line: %s'%plan_lines)
@@ -159,7 +155,7 @@ def make_plan_header(plan):
             plan_header['calls'].append(plan_value[i])
         else:
             plan_header['WorkFrac'].append(plan_value[i])
-=======
+	
 	#There may be multiple plans for corresponding DM intervals, read all of them separately
 	#and store the ith plan in the ith entry of the header key's list
 	for line in plan.split('\n'):
@@ -195,7 +191,6 @@ def make_plan_header(plan):
 			plan_header['calls'].append(plan_value[i])
 		else:
 			plan_header['WorkFrac'].append(plan_value[i])
->>>>>>> f528f0413c5794796ab316260d45c66b29ae8296
 
 	return plan_header
 
@@ -235,8 +230,8 @@ def run_prepsubband(input_filename, plan_header, maskname, nsub):
                              	     '-downsamp', downsamp,\
                              	     '-nobary',\
                              	     '-nsub', nsub,\
-                             	     '-o', output_fileroot, input_filename],\
-                             	     #'-mask', maskname],\
+                             	     '-o', output_fileroot, input_filename,\
+                             	     '-mask', maskname],\
                              	     shell=False)
                     dir = move_subbands(output_fileroot)
                  
@@ -249,8 +244,8 @@ def run_prepsubband(input_filename, plan_header, maskname, nsub):
                                  '-downsamp', downsamp,\
                                  '-nobary',\
                         	 '-nsub', nsub,\
-                        	 '-o', output_fileroot, input_filename],\
-                        	 #'-mask', maskname],\
+                        	 '-o', output_fileroot, input_filename,\
+                        	 '-mask', maskname],\
                         	 shell=False)
                 dir = move_subbands(output_fileroot)	    	
 		
@@ -319,10 +314,10 @@ def run_single_pulse_search(dir, *args):
     #each single pulse seaching will generate a plot which groups all the input DM
 
     if len(args)==0:
-        subprocess.call('single_pulse_search.py -f -t 4 *.dat', cwd=dir+'/', shell=True)
+        subprocess.call('single_pulse_search.py -f *.dat', cwd=dir+'/', shell=True)
     else:
         for arg in args:
-            subprocess.call('single_pulse_search.py -f -t 4 %s'%arg, cwd=dir+'/', shell=True)   
+            subprocess.call('single_pulse_search.py -f %s'%arg, cwd=dir+'/', shell=True)   
 
 def move_subbands(fileroot):
 
@@ -330,7 +325,7 @@ def move_subbands(fileroot):
 
     current_path = os.getcwd()
     #dir = current_path+"/"+fileroot+"_subbands"
-    dir = current_path+"/"+fileroot+"_subbands_nomask_threshold4"
+    dir = current_path+"/"+fileroot+"_subbands_zerodm"
     if not os.path.exists(dir):
         os.makedirs(dir)
     files = os.listdir(current_path)
@@ -539,20 +534,20 @@ def main():
 	rfifind_time_interval = 1
 	clip = 6.0						
 	#if not os.path.isfile(fileroot+'_rfifind.mask'):
-	#maskname = run_rfifind(input_filename, rfifind_time_interval, '-clip %.1f'%clip)
+	maskname = run_rfifind(input_filename, rfifind_time_interval, '-clip %.1f -zerodm'%clip)
 	#else:
-	maskname = fileroot+'_rfifind.mask'
+	#maskname = fileroot+'_rfifind.mask'
 	#dbgmsg('Mask Name: %s'%maskname)
 	print("%sDONE FINDING RFI%s\n"%(dash, dash))
 	
 	#Prepare subbands
 	print("%sSTART PREPARING SUBBANDS & SINGLE PULSE SEARCH%s"%(dash, dash))
-	#output_dir = run_prepsubband(input_filename, plan_header, maskname, nsub)
+	output_dir = run_prepsubband(input_filename, plan_header, maskname, nsub)
 	#output_dir = '/home/presto/workspace/17-02-08-incoherent/frb_search_1/composition_p1_subbands'
 	#output_dir = '/home/presto/workspace/17-02-08-incoherent/frb_search_1/example2_raw_subbands'
-	output_dir = '/home/presto/workspace/17-02-08-incoherent/L1_sample/example2_2_subbands_threshold4'
+	#output_dir = '/home/presto/workspace/17-02-08-incoherent/L1_sample/example2_2_subbands_threshold4'
 	#output_dir = '/home/presto/workspace/17-02-08-incoherent/L1_sample/example2_2_subbands_nomask_threshold5_b_m'
-	output_dir = '/home/presto/workspace/17-02-08-incoherent/L1_sample/example2_2_subbands_threshold5'
+	#output_dir = '/home/presto/workspace/17-02-08-incoherent/L1_sample/example2_2_subbands_threshold5'
 	print("%sDONE SINGLE PULSE SEARCH & FILES MOVED%s\n"%(dash, dash))
 
 	#Do single pulse search based on the gourp specified
@@ -562,7 +557,6 @@ def main():
 	group_single_pulse_search_plot(input_filename, plan_header, output_dir, group)
 	print("%sDONE SINGLE PULSE SEARCH & FILES MOVED%s\n"%(dash, dash))
 
-<<<<<<< HEAD
 	# print("%sSTART RRATTRAPS%s"%(dash, dash))
 	# run_rrattrap(output_dir)
 	# print("%sDONE RRATTRAPS%s\n"%(dash, dash))
@@ -574,7 +568,6 @@ def main():
 	# print("%sSTART %s"%(dash, dash))
 	# plot_pulses(output_dir, pulses, fileroot)
 	# print("%sDONE GROUPING PULSES%s\n"%(dash, dash))
-=======
 	print("%sSTART RRATTRAPS%s"%(dash, dash))
 	#run_rrattrap(output_dir)
 	print("%sDONE RRATTRAPS%s\n"%(dash, dash))
@@ -592,7 +585,6 @@ def main():
 	print("%sSTART %s"%(dash, dash))
 	#plot_pulses(output_dir, pulses, fileroot, 0, 410)
 	print("%sDONE GROUPING PULSES%s\n"%(dash, dash))
->>>>>>> f528f0413c5794796ab316260d45c66b29ae8296
 
 
     
