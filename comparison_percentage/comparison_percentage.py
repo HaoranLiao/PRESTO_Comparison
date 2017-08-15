@@ -300,7 +300,7 @@ def plot_snr_compare(npy_fullresult, sps_fullresult):
 	lin_fit = plt.plot(x, lin_func_no_intercept(x, *popt), 'r--', label='linear fit zero intercept')
 	plt.legend(lin_fit, ['y=(%.2f$\pm$%.2f)$\cdot$x'%(popt[0], perr)], loc='upper right')
 
-	plt.savefig("maskfrac.svg")
+	plt.savefig("snr.svg")
 
 	plt.show()
 
