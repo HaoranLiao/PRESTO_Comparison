@@ -1,1 +1,0 @@
- python rrattrap.py --use-configfile --use-DMplan --vary-group-size --inffile ../*rfifind.inf -o rrattrap_test *pulse
